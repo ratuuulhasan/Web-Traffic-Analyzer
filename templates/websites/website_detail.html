@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ website.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">{{ website.name }}</h2>
+            <a href="{{ website.domain }}" target="_blank" class="text-muted small">{{ website.domain }}</a>
+        </div>
+        <div>
+            <a href="{% url 'websites:edit' website.pk %}" class="btn btn-outline-secondary">Edit</a>
+            <a href="{% url 'websites:delete' website.pk %}" class="btn btn-outline-danger">Delete</a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-center p-3 shadow-sm">
+                <h3 class="text-primary">{{ total_views }}</h3>
+                <p class="mb-0 text-muted">Total Page Views</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center p-3 shadow-sm">
+                <h3 class="text-success">{{ unique_visitors }}</h3>
+                <p class="mb-0 text-muted">Unique Visitors</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Code -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <strong>📋 Tracking Code</strong>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Copy the code below and paste it before <code>&lt;/head&gt;</code> tag on every page of your website.
+            </p>
+
+            <div class="bg-light p-3 rounded border">
+                <pre class="mb-0" id="tracking-code" style="white-space: pre-wrap; word-break: break-all;">&lt;script 
+    src="{{ tracking_url }}" 
+    data-tracking-id="{{ website.tracking_id }}"&gt;
+&lt;/script&gt;</pre>
+            </div>
+
+            <button class="btn btn-primary mt-3" onclick="copyCode()">📎 Copy Code</button>
+            <span id="copy-status" class="text-success ms-2" style="display:none;">Copied!</span>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'websites:list' %}" class="btn btn-outline-secondary">← Back to My Websites</a>
+    </div>
+</div>
+
+<script>
+function copyCode() {
+    const code = document.getElementById('tracking-code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        const s = document.getElementById('copy-status');
+        s.style.display = 'inline';
+        setTimeout(() => s.style.display = 'none', 2000);
+    });
+}
+</script>
+{% endblock %}

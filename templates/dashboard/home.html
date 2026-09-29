@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+<div class="mt-4">
+    <h2>🚀 Welcome, {{ user.username }}!</h2>
+    <p class="text-muted">Your Traffic Analyzer dashboard</p>
+
+    <!-- Stat Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-center p-3 shadow-sm border-0">
+                <h3 class="text-primary mb-0" id="stat-websites">-</h3>
+                <p class="mb-0 text-muted">Websites</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center p-3 shadow-sm border-0">
+                <h3 class="text-success mb-0" id="stat-visitors">-</h3>
+                <p class="mb-0 text-muted">Unique Visitors</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center p-3 shadow-sm border-0">
+                <h3 class="text-warning mb-0" id="stat-views">-</h3>
+                <p class="mb-0 text-muted">Total Page Views</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mt-4">
+        <div class="col-md-8 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <strong>📈 Last 7 Days Traffic</strong>
+                </div>
+                <div class="card-body">
+                    <canvas id="dailyChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <strong>🌐 Browsers</strong>
+                </div>
+                <div class="card-body">
+                    <canvas id="browserChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/websites/" class="btn btn-primary mt-3">Manage Websites</a>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+fetch('/api/stats/')
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('stat-websites').innerText = data.total_websites;
+        document.getElementById('stat-visitors').innerText = data.total_visitors;
+        document.getElementById('stat-views').innerText = data.total_views;
+
+        // Daily chart
+        new Chart(document.getElementById('dailyChart'), {
+            type: 'line',
+            data: {
+                labels: data.daily_labels,
+                datasets: [{
+                    label: 'Page Views',
+                    data: data.daily_counts,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Browser chart
+        if (data.browsers.labels.length > 0) {
+            new Chart(document.getElementById('browserChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.browsers.labels,
+                    datasets: [{
+                        data: data.browsers.counts,
+                        backgroundColor: ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6']
+                    }]
+                }
+            });
+        }
+    })
+    .catch(err => console.error('Stats error:', err));
+</script>
+
+{% else %}
+<div class="text-center mt-5">
+    <h1>📊 Traffic Analyzer</h1>
+    <p class="text-muted">Track your website traffic with ease.</p>
+    <a href="/accounts/register/" class="btn btn-primary btn-lg mt-3">Get Started Free</a>
+    <a href="/accounts/login/" class="btn btn-outline-secondary btn-lg mt-3">Login</a>
+</div>
+{% endif %}
+
+{% endblock %}

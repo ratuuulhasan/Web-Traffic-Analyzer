@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Delete Website{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <h2 class="text-danger">⚠️ Delete Website</h2>
+    <p>Are you sure you want to delete <strong>{{ website.name }}</strong>?</p>
+    <p class="text-muted small">All tracking data will be permanently deleted.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100">Yes, Delete</button>
+        <a href="{% url 'websites:detail' website.pk %}" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

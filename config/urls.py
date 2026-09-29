@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('api/', include('analytics.urls')),
     path('accounts/', include('accounts.urls')),
+    path('websites/', include('websites.urls')),
 ]

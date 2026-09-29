@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <h2>{{ title }}</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label class="form-label">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <small class="text-danger">{{ form.name.errors.0 }}</small>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">{{ form.domain.label }}</label>
+            {{ form.domain }}
+            {% if form.domain.errors %}
+                <small class="text-danger">{{ form.domain.errors.0 }}</small>
+            {% endif %}
+            <small class="text-muted">Example: https://myblog.com</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Save Website</button>
+        <a href="{% url 'websites:list' %}" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}
