@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <h2>👤 Your Profile</h2>
+
+    <table class="table">
+        <tr>
+            <th>Username:</th>
+            <td>{{ user.username }}</td>
+        </tr>
+        <tr>
+            <th>Email:</th>
+            <td>{{ user.email|default:"Not set" }}</td>
+        </tr>
+        <tr>
+            <th>Joined:</th>
+            <td>{{ user.date_joined|date:"d M Y" }}</td>
+        </tr>
+        <tr>
+            <th>Last Login:</th>
+            <td>{{ user.last_login|date:"d M Y, H:i" }}</td>
+        </tr>
+    </table>
+
+    <a href="{% url 'dashboard:home' %}" class="btn btn-primary">Back to Dashboard</a>
+</div>
+{% endblock %}
