@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -76,3 +77,40 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
+
+# Redis Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'traffic_analyzer',
+        'TIMEOUT': 300,
+    }
+}
+
+# Real-time visitor settings
+REALTIME_WINDOW = 300
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'analytics.api.authentication.APIKeyAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+}

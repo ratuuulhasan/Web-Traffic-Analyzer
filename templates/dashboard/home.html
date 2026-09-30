@@ -5,8 +5,21 @@
 
 {% if user.is_authenticated %}
 <div class="mt-4">
-    <h2>🚀 Welcome, {{ user.username }}!</h2>
-    <p class="text-muted">Your Traffic Analyzer dashboard</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2>🚀 Welcome, {{ user.username }}!</h2>
+            <p class="text-muted mb-0">Your Traffic Analyzer dashboard</p>
+        </div>
+        <div class="text-end">
+            <div class="d-flex align-items-center">
+                <span class="badge bg-success me-2" style="animation: pulse 2s infinite;">●</span>
+                <div>
+                    <div class="fw-bold fs-4 mb-0" id="realtime-count">0</div>
+                    <small class="text-muted">Active Now</small>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Stat Cards -->
     <div class="row mt-4">
@@ -30,8 +43,38 @@
         </div>
     </div>
 
+    <!-- 🌐 Realtime Visitors Panel -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <strong>⚡ Live Visitors</strong>
+            <small class="text-muted" id="realtime-updated">Loading...</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="realtime-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Page</th>
+                            <th>Country</th>
+                            <th>Browser</th>
+                            <th>Device</th>
+                            <th>Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="realtime-body">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">
+                                No active visitors right now
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts -->
-    <div class="row mt-4">
+    <div class="row mt-3">
         <div class="col-md-8 mb-3">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white">
@@ -54,13 +97,156 @@
         </div>
     </div>
 
-    <a href="/websites/" class="btn btn-primary mt-3">Manage Websites</a>
+    <div class="row mt-2">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <strong>🌍 Top Countries</strong>
+                </div>
+                <div class="card-body">
+                    <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <strong>📋 Country List</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush" id="country-list">
+                        <li class="list-group-item text-muted">No data yet</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user.websites.all %}
+    <div class="card shadow-sm border-0 mt-3 mb-3">
+        <div class="card-header bg-white">
+            <strong>🌐 Quick Access — Your Websites</strong>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for site in user.websites.all %}
+                <div class="col-md-4 mb-2">
+                    <a href="{% url 'websites:detail' site.pk %}" 
+                    class="btn btn-outline-primary w-100 text-start">
+                        📊 {{ site.name }}
+                        <small class="d-block text-muted">{{ site.domain|truncatechars:30 }}</small>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <a href="/websites/" class="btn btn-primary mt-3 mb-5">Manage Websites</a>
 </div>
 
-<!-- Chart.js CDN -->
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+}
+.new-visitor {
+    animation: highlight 2s ease-out;
+}
+@keyframes highlight {
+    from { background-color: #fff3cd; }
+    to { background-color: transparent; }
+}
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+// ============ REALTIME VISITOR POLLING ============
+let previousVisitorIds = new Set();
+
+function timeAgo(isoString) {
+    const now = new Date();
+    const then = new Date(isoString);
+    const seconds = Math.floor((now - then) / 1000);
+    if (seconds < 60) return seconds + 's ago';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + 'm ago';
+    const hours = Math.floor(minutes / 60);
+    return hours + 'h ago';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+function fetchRealtime() {
+    fetch('/api/realtime/')
+        .then(res => res.json())
+        .then(data => {
+            // Update count with animated pulse
+            const countEl = document.getElementById('realtime-count');
+            countEl.textContent = data.count;
+
+            const updatedEl = document.getElementById('realtime-updated');
+            updatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+            // Update table
+            const tbody = document.getElementById('realtime-body');
+            tbody.innerHTML = '';
+
+            if (data.visitors.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">
+                            No active visitors right now
+                        </td>
+                    </tr>`;
+                previousVisitorIds = new Set();
+                return;
+            }
+
+            const currentIds = new Set();
+
+            data.visitors.forEach(v => {
+                const vid = v.visitor_id;
+                currentIds.add(vid);
+                const isNew = !previousVisitorIds.has(vid);
+
+                const tr = document.createElement('tr');
+                if (isNew) tr.className = 'new-visitor';
+
+                const shortUrl = v.url ? new URL(v.url).pathname : '/';
+                tr.innerHTML = `
+                    <td>
+                        <div class="fw-bold small">${escapeHtml(v.page_title || 'Untitled')}</div>
+                        <small class="text-muted">${escapeHtml(shortUrl)}</small>
+                        <br><small class="text-primary">${escapeHtml(v.website_name || '')}</small>
+                    </td>
+                    <td><span class="badge bg-info">${escapeHtml(v.country || 'Unknown')}</span></td>
+                    <td><small>${escapeHtml(v.browser || '-')}</small></td>
+                    <td><small>${escapeHtml(v.device || '-')}</small></td>
+                    <td><small class="text-muted">${timeAgo(v.last_seen)}</small></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            previousVisitorIds = currentIds;
+        })
+        .catch(err => {
+            console.error('Realtime fetch error:', err);
+        });
+}
+
+// Fetch immediately, then every 5 seconds
+fetchRealtime();
+setInterval(fetchRealtime, 5000);
+
+
+// ============ STATS + CHARTS ============
 fetch('/api/stats/')
     .then(res => res.json())
     .then(data => {
@@ -91,7 +277,7 @@ fetch('/api/stats/')
         });
 
         // Browser chart
-        if (data.browsers.labels.length > 0) {
+        if (data.browsers && data.browsers.labels.length > 0) {
             new Chart(document.getElementById('browserChart'), {
                 type: 'doughnut',
                 data: {
@@ -101,6 +287,35 @@ fetch('/api/stats/')
                         backgroundColor: ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6']
                     }]
                 }
+            });
+        }
+
+        // Country chart
+        if (data.countries && data.countries.labels.length > 0) {
+            new Chart(document.getElementById('countryChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.countries.labels,
+                    datasets: [{
+                        label: 'Visitors',
+                        data: data.countries.counts,
+                        backgroundColor: '#2ecc71',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const list = document.getElementById('country-list');
+            list.innerHTML = '';
+            data.countries.labels.forEach((country, i) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between';
+                li.innerHTML = `<span>🌍 ${country}</span><span class="badge bg-primary">${data.countries.counts[i]}</span>`;
+                list.appendChild(li);
             });
         }
     })

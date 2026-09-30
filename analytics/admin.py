@@ -4,8 +4,9 @@ from .models import Visitor, PageView
 
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
-    list_display = ('visitor_id', 'website', 'country', 'browser', 'os', 'last_visit')
-    list_filter = ('browser', 'os', 'country')
+    list_display = ('visitor_id', 'website', 'country', 'browser', 'os', 'device', 'last_visit')
+    list_filter = ('country', 'browser', 'os', 'device')
+    search_fields = ('visitor_id', 'ip_address', 'country')
 
 
 @admin.register(PageView)
