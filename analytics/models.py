@@ -4,7 +4,11 @@ from websites.models import Website
 
 class Visitor(models.Model):
     visitor_id = models.CharField(max_length=64, db_index=True)
-    website = models.ForeignKey(Website, on_delete=models.CASCADE)
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='visitors'
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     country = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)

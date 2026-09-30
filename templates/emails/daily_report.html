@@ -1,0 +1,71 @@
+{% extends 'emails/base_email.html' %}
+
+{% block subtitle %}Daily Report — {{ date|date:"d M Y" }}{% endblock %}
+
+{% block content %}
+<h2 style="color: #333;">{{ website.name }}</h2>
+<p style="color: #666;">Here's what happened in the last 24 hours:</p>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <h2>{{ stats.page_views }}</h2>
+        <p>PAGE VIEWS</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #2ecc71;">
+        <h2 style="color: #2ecc71;">{{ stats.unique_visitors }}</h2>
+        <p>UNIQUE VISITORS</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #f39c12;">
+        <h2 style="color: #f39c12;">{{ stats.new_visitors }}</h2>
+        <p>NEW VISITORS</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #e74c3c;">
+        <h2 style="color: #e74c3c;">{{ stats.bounce_rate }}%</h2>
+        <p>BOUNCE RATE</p>
+    </div>
+</div>
+
+{% if top_pages %}
+<h3 style="color: #333; margin-top: 30px;">🔥 Top Pages</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Page</th>
+            <th style="text-align: right;">Views</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for page in top_pages %}
+        <tr>
+            <td>{{ page.url|truncatechars:50 }}</td>
+            <td style="text-align: right;"><strong>{{ page.views }}</strong></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if countries %}
+<h3 style="color: #333; margin-top: 30px;">🌍 Top Countries</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Country</th>
+            <th style="text-align: right;">Visitors</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in countries %}
+        <tr>
+            <td>{{ c.country }}</td>
+            <td style="text-align: right;"><strong>{{ c.count }}</strong></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{{ detail_url }}" class="btn">View Full Dashboard</a>
+</div>
+{% endblock %}

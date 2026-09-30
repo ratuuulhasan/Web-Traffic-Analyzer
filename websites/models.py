@@ -31,3 +31,31 @@ class APIKey(models.Model):
 
     def __str__(self):
         return f"API Key for {self.website.name}"
+
+class EmailReportSetting(models.Model):
+    FREQUENCY_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+
+    website = models.OneToOneField(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='email_report'
+    )
+    is_enabled = models.BooleanField(default=False)
+    frequency = models.CharField(
+        max_length=10,
+        choices=FREQUENCY_CHOICES,
+        default='daily'
+    )
+    send_hour = models.PositiveIntegerField(
+        default=9,
+        help_text='Hour of day (0-23) to send email'
+    )
+    last_sent = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.website.name} - {self.frequency} report"

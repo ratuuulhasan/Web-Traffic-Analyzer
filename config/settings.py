@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'websites',
     'analytics',
     'dashboard',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -114,3 +116,25 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
     },
 }
+
+# ============ Celery Configuration ============
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE if 'TIME_ZONE' in dir() else 'Asia/Dhaka'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Email (development: console, production: smtp)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Dev: console এ দেখাবে
+# Production এ এই two lines replace করুন:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+
+DEFAULT_FROM_EMAIL = 'Traffic Analyzer <noreply@trafficanalyzer.com>'
+SITE_URL = 'http://127.0.0.1:8000'
