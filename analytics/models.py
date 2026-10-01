@@ -38,3 +38,31 @@ class PageView(models.Model):
 
     def __str__(self):
         return f"{self.url} - {self.timestamp}"
+
+class Event(models.Model):
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='events'
+    )
+    visitor = models.ForeignKey(
+        Visitor,
+        on_delete=models.CASCADE,
+        related_name='events',
+        null=True,
+        blank=True
+    )
+    name = models.CharField(max_length=100, db_index=True)
+    properties = models.JSONField(default=dict, blank=True)
+    url = models.URLField(max_length=500, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['website', 'name']),
+            models.Index(fields=['website', 'timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.website.name}"
