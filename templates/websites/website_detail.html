@@ -335,6 +335,22 @@
         </div>
     </div>
 
+    <!-- 📧 Email Reports Card -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <strong>📧 Email Reports</strong>
+                <p class="text-muted small mb-0">
+                    Get automatic daily/weekly reports via email.
+                </p>
+            </div>
+            <a href="{% url 'websites:email-settings' website.pk %}" 
+            class="btn btn-outline-primary">
+                ⚙️ Configure →
+            </a>
+        </div>
+    </div>
+
     <script>
     (function() {
         const baseUrls = {

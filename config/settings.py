@@ -30,7 +30,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',   
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -58,6 +58,8 @@ TEMPLATES = [
     },
 ]
 
+WSGI_APPLICATION = 'config.wsgi.application'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -65,8 +67,15 @@ DATABASES = {
     }
 }
 
-CORS_ALLOW_ALL_ORIGINS = True   
+# ============ Internationalization ============
+LANGUAGE_CODE = 'en-us'
 
+TIME_ZONE = 'Asia/Dhaka'          # ← ✅ এখানে TIME_ZONE define করা হলো
+
+USE_I18N = True
+USE_TZ = True
+
+# ============ Static & Media ============
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -74,15 +83,20 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============ CORS ============
+CORS_ALLOW_ALL_ORIGINS = True
+
+# ============ Auth ============
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+# ============ GeoIP ============
 GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
 
-# Redis Cache Configuration
+# ============ Redis Cache ============
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -98,6 +112,7 @@ CACHES = {
 # Real-time visitor settings
 REALTIME_WINDOW = 300
 
+# ============ REST Framework ============
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'analytics.api.authentication.APIKeyAuthentication',
@@ -123,18 +138,15 @@ CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE if 'TIME_ZONE' in dir() else 'Asia/Dhaka'
+CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# Email (development: console, production: smtp)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Dev: console এ দেখাবে
-# Production এ এই two lines replace করুন:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
-
-DEFAULT_FROM_EMAIL = 'Traffic Analyzer <noreply@trafficanalyzer.com>'
+# ============ Email Configuration ============
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'hratul838@gmail.com'
+EMAIL_HOST_PASSWORD = 'dhxn msrx maut zlfp'
+DEFAULT_FROM_EMAIL = 'Traffic Analyzer <hratul838@gmail.com>'   
 SITE_URL = 'http://127.0.0.1:8000'
