@@ -15,4 +15,5 @@ urlpatterns = [
     path('<int:pk>/email-settings/', views.email_settings, name='email-settings'),
     path('<int:pk>/email-settings/test/', views.send_test_email, name='send-test-email'),
     path('<int:pk>/events/', views.website_events, name='events'),
+    path('<int:pk>/map/', views.website_map, name='map'),
 ]

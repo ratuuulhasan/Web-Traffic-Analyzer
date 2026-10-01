@@ -17,6 +17,8 @@ from .realtime import mark_visitor_active, get_active_visitors
 from .realtime import get_all_active_summary
 from django.shortcuts import get_object_or_404
 from .realtime import get_active_visitors
+from .country_coords import get_coords
+import random
 
 
 
@@ -467,4 +469,104 @@ def website_events_list_api(request, pk):
         'total': paginator.count,
         'has_next': page.has_next(),
         'has_prev': page.has_previous(),
+    })
+
+@login_required
+def map_data_api(request, pk):
+    """Return location data for map markers."""
+    from websites.models import Website
+    from django.shortcuts import get_object_or_404
+    from .realtime import get_active_visitors
+
+    website = get_object_or_404(Website, pk=pk, owner=request.user)
+
+    # Active visitors (last 5 min)
+    active = get_active_visitors(website.id)
+
+    markers = []
+    country_counts = {}
+
+    for vid, data in active.items():
+        country = data.get('country', 'Unknown')
+
+        # Skip if we can't determine coordinates
+        coords = get_coords(country)
+        if not coords:
+            continue
+
+        lat, lng = coords
+
+        # Small random offset so multiple visitors from same country don't overlap
+        lat += random.uniform(-1.5, 1.5)
+        lng += random.uniform(-1.5, 1.5)
+
+        markers.append({
+            'lat': lat,
+            'lng': lng,
+            'country': country,
+            'visitor_id': vid,
+            'url': data.get('url', ''),
+            'page_title': data.get('page_title', ''),
+            'browser': data.get('browser', ''),
+            'os': data.get('os', ''),
+            'device': data.get('device', ''),
+            'last_seen': data.get('last_seen', ''),
+        })
+
+        country_counts[country] = country_counts.get(country, 0) + 1
+
+    # Sort countries by count
+    top_countries = sorted(
+        [{'country': k, 'count': v} for k, v in country_counts.items()],
+        key=lambda x: -x['count']
+    )
+
+    return JsonResponse({
+        'count': len(markers),
+        'markers': markers,
+        'top_countries': top_countries,
+        'timestamp': timezone.now().isoformat(),
+    })
+
+
+@login_required
+def map_history_api(request, pk):
+    """Historical map data (visitors in last N days)."""
+    from websites.models import Website
+    from django.shortcuts import get_object_or_404
+
+    website = get_object_or_404(Website, pk=pk, owner=request.user)
+
+    days = int(request.GET.get('days', 7))
+    days = min(max(days, 1), 90)
+    since = timezone.now() - timedelta(days=days)
+
+    visitors = (
+        Visitor.objects
+        .filter(website=website, last_visit__gte=since)
+        .exclude(country='')
+        .values('country')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    markers = []
+    for v in visitors:
+        coords = get_coords(v['country'])
+        if not coords:
+            continue
+        lat, lng = coords
+        # Larger offset for country-level aggregation
+        lat += random.uniform(-2, 2)
+        lng += random.uniform(-2, 2)
+        markers.append({
+            'lat': lat,
+            'lng': lng,
+            'country': v['country'],
+            'count': v['count'],
+        })
+
+    return JsonResponse({
+        'markers': markers,
+        'days': days,
     })

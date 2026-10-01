@@ -383,3 +383,10 @@ def website_events(request, pk):
         'unique_event_types': unique_event_types,
         'top_events': top_events,
     })
+
+@login_required
+def website_map(request, pk):
+    website = get_object_or_404(Website, pk=pk, owner=request.user)
+    return render(request, 'websites/website_map.html', {
+        'website': website,
+    })

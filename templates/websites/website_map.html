@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+{% block title %}Live Map - {{ website.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">🗺️ Live Visitor Map</h2>
+            <a href="{% url 'websites:detail' website.pk %}" class="text-muted small">
+                {{ website.name }} →
+            </a>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="text-end">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-success me-2" style="animation: pulse 2s infinite;">●</span>
+                    <span class="fs-4 fw-bold" id="active-count">0</span>
+                </div>
+                <small class="text-muted">Active Now</small>
+            </div>
+            <a href="{% url 'websites:detail' website.pk %}" class="btn btn-outline-secondary">
+                ← Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Map Controls -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body py-2">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="viewmode" id="mode-live" value="live" checked>
+                    <label class="btn btn-outline-primary" for="mode-live">
+                        ⚡ Live (5 min)
+                    </label>
+
+                    <input type="radio" class="btn-check" name="viewmode" id="mode-history" value="history">
+                    <label class="btn btn-outline-primary" for="mode-history">
+                        📅 History (7 days)
+                    </label>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted" id="update-info">Auto-refresh: 5s</small>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshNow()">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Map -->
+        <div class="col-md-9 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div id="map" style="height: 600px; border-radius: 8px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-3">
+            <!-- Top Countries -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-white">
+                    <strong>🌍 Top Countries</strong>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="country-list">
+                        <div class="list-group-item text-muted text-center small py-3">
+                            No active visitors
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Visitors -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <strong>👥 Live Visitors</strong>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <div class="list-group list-group-flush" id="visitor-list">
+                        <div class="list-group-item text-muted text-center small py-3">
+                            No active visitors
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+/* Custom pulse marker */
+.pulse-marker {
+    width: 20px;
+    height: 20px;
+    background: #e74c3c;
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(231, 76, 60, 0.7);
+    animation: markerPulse 2s infinite;
+    cursor: pointer;
+}
+
+@keyframes markerPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(231, 76, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
+
+.pulse-marker.history {
+    background: #3498db;
+    animation: none;
+    width: 16px;
+    height: 16px;
+}
+
+.marker-popup .title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+.marker-popup .meta {
+    font-size: 12px;
+    color: #666;
+    margin: 3px 0;
+}
+
+.marker-popup code {
+    font-size: 11px;
+}
+
+/* Dark-themed leaflet */
+.leaflet-container {
+    background: #aad3df;
+    font-family: inherit;
+}
+</style>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+const websiteId = {{ website.id }};
+let map;
+let markerLayer;
+let currentMode = 'live';
+let refreshInterval = null;
+let knownVisitorIds = new Set();
+
+// ============ Init Map ============
+
+function initMap() {
+    map = L.map('map', {
+        center: [20, 0],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 10,
+        worldCopyJump: true,
+    });
+
+    // ============ Tile Layers ============
+    const streetMap = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        {
+            attribution: 'Tiles © Esri',
+            maxZoom: 19,
+        }
+    ).addTo(map);
+
+    const satellite = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+            attribution: 'Tiles © Esri',
+            maxZoom: 18,
+        }
+    );
+
+    const topo = L.tileLayer(
+        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        {
+            attribution: 'Map data: © OpenStreetMap, SRTM | Style: © OpenTopoMap',
+            maxZoom: 17,
+            subdomains: 'abc',
+        }
+    );
+
+    // ============ Layer Switcher ============
+    L.control.layers(
+        {
+            '🗺️ Street': streetMap,
+            '🛰️ Satellite': satellite,
+            '⛰️ Terrain': topo,
+        },
+        null,
+        { position: 'topright', collapsed: false }
+    ).addTo(map);
+
+    // Cluster group
+    markerLayer = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        maxClusterRadius: 40,
+        spiderfyOnMaxZoom: true,
+    });
+
+    map.addLayer(markerLayer);
+}
+
+// ============ Custom Pulse Icon ============
+function makePulseIcon(isHistory) {
+    return L.divIcon({
+        className: '',
+        html: `<div class="pulse-marker ${isHistory ? 'history' : ''}"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, -10],
+    });
+}
+
+// ============ Time Ago ============
+function timeAgo(iso) {
+    if (!iso) return '';
+    const s = Math.floor((new Date() - new Date(iso)) / 1000);
+    if (s < 60) return s + 's ago';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ago';
+    return Math.floor(m / 60) + 'h ago';
+}
+
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t == null ? '' : t;
+    return d.innerHTML;
+}
+
+// ============ Load Live Data ============
+function loadLiveData() {
+    fetch(`/api/website/${websiteId}/map/`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('active-count').textContent = data.count;
+            document.getElementById('update-info').textContent =
+                'Updated ' + new Date().toLocaleTimeString();
+
+            // Clear markers
+            markerLayer.clearLayers();
+
+            // Add markers
+            data.markers.forEach(m => {
+                const isNew = !knownVisitorIds.has(m.visitor_id);
+                knownVisitorIds.add(m.visitor_id);
+
+                const shortUrl = m.url ? new URL(m.url).pathname : '/';
+                const popupHtml = `
+                    <div class="marker-popup" style="min-width: 220px;">
+                        <div class="title">${escapeHtml(m.page_title || 'Untitled')}</div>
+                        <div class="meta">🌍 ${escapeHtml(m.country)}</div>
+                        <div class="meta">🔗 <code>${escapeHtml(shortUrl)}</code></div>
+                        <div class="meta">💻 ${escapeHtml(m.browser)} — ${escapeHtml(m.os)}</div>
+                        <div class="meta">📱 ${escapeHtml(m.device)}</div>
+                        <div class="meta">⏱️ ${timeAgo(m.last_seen)}</div>
+                        <div class="meta">👤 <code>${escapeHtml(m.visitor_id.slice(0, 12))}</code></div>
+                    </div>
+                `;
+
+                const marker = L.marker([m.lat, m.lng], {
+                    icon: makePulseIcon(false),
+                }).bindPopup(popupHtml);
+
+                markerLayer.addLayer(marker);
+            });
+
+            // Update sidebar
+            updateCountryList(data.top_countries);
+            updateVisitorList(data.markers);
+        })
+        .catch(err => console.error('Map load error:', err));
+}
+
+// ============ Load History Data ============
+function loadHistoryData() {
+    fetch(`/api/website/${websiteId}/map/history/?days=7`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('active-count').textContent = 
+                data.markers.reduce((sum, m) => sum + m.count, 0);
+            document.getElementById('update-info').textContent = 
+                'Last 7 days — ' + new Date().toLocaleTimeString();
+
+            markerLayer.clearLayers();
+
+            data.markers.forEach(m => {
+                const popupHtml = `
+                    <div class="marker-popup" style="min-width: 180px;">
+                        <div class="title">${escapeHtml(m.country)}</div>
+                        <div class="meta">👥 ${m.count} visitors</div>
+                    </div>
+                `;
+
+                const marker = L.marker([m.lat, m.lng], {
+                    icon: makePulseIcon(true),
+                }).bindPopup(popupHtml);
+
+                markerLayer.addLayer(marker);
+            });
+
+            // Country list from history
+            const topCountries = data.markers
+                .slice()
+                .sort((a, b) => b.count - a.count)
+                .map(m => ({country: m.country, count: m.count}));
+            updateCountryList(topCountries);
+
+            document.getElementById('visitor-list').innerHTML =
+                '<div class="list-group-item text-muted text-center small py-3">' +
+                'Switch to Live mode to see active visitors</div>';
+        })
+        .catch(err => console.error('History error:', err));
+}
+
+// ============ Sidebar Updates ============
+function updateCountryList(countries) {
+    const el = document.getElementById('country-list');
+    if (!countries || countries.length === 0) {
+        el.innerHTML = '<div class="list-group-item text-muted text-center small py-3">No data</div>';
+        return;
+    }
+
+    el.innerHTML = '';
+    countries.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'list-group-item d-flex justify-content-between align-items-center small';
+        div.innerHTML = `
+            <span>🌍 ${escapeHtml(c.country)}</span>
+            <span class="badge bg-primary">${c.count}</span>
+        `;
+        el.appendChild(div);
+    });
+}
+
+function updateVisitorList(markers) {
+    const el = document.getElementById('visitor-list');
+    if (!markers || markers.length === 0) {
+        el.innerHTML = '<div class="list-group-item text-muted text-center small py-3">No active visitors</div>';
+        return;
+    }
+
+    el.innerHTML = '';
+    markers.forEach(m => {
+        const shortUrl = m.url ? new URL(m.url).pathname : '/';
+        const div = document.createElement('div');
+        div.className = 'list-group-item small';
+        div.innerHTML = `
+            <div class="fw-bold">${escapeHtml(m.page_title || 'Untitled')}</div>
+            <div class="text-muted">${escapeHtml(shortUrl)}</div>
+            <div class="text-muted">🌍 ${escapeHtml(m.country)} • ${escapeHtml(m.browser)}</div>
+            <div class="text-muted">${timeAgo(m.last_seen)}</div>
+        `;
+        div.style.cursor = 'pointer';
+        div.onclick = () => {
+            map.setView([m.lat, m.lng], 6);
+        };
+        el.appendChild(div);
+    });
+}
+
+// ============ Manual Refresh ============
+function refreshNow() {
+    if (currentMode === 'live') loadLiveData();
+    else loadHistoryData();
+}
+
+// ============ Mode Switch ============
+document.querySelectorAll('input[name="viewmode"]').forEach(el => {
+    el.addEventListener('change', (e) => {
+        currentMode = e.target.value;
+
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+
+        if (currentMode === 'live') {
+            knownVisitorIds = new Set();
+            loadLiveData();
+            refreshInterval = setInterval(loadLiveData, 5000);
+            document.getElementById('update-info').textContent = 'Auto-refresh: 5s';
+        } else {
+            loadHistoryData();
+            document.getElementById('update-info').textContent = 'Last 7 days';
+        }
+    });
+});
+
+// ============ Initialize ============
+initMap();
+loadLiveData();
+refreshInterval = setInterval(loadLiveData, 5000);
+</script>
+
+{% endblock %}
