@@ -1,41 +1,72 @@
 {% extends 'base.html' %}
 {% block title %}My Websites{% endblock %}
+{% block page_title %}My Websites{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>🌐 My Websites</h2>
-        <a href="{% url 'websites:add' %}" class="btn btn-primary">+ Add Website</a>
-    </div>
 
-    {% if websites %}
-        <div class="row">
-            {% for site in websites %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ site.name }}</h5>
-                        <p class="text-muted small mb-2">{{ site.domain }}</p>
-                        <p class="mb-2">
-                            <span class="badge bg-info">{{ site.total_views }} views</span>
-                        </p>
-                        <p class="text-muted small">Added {{ site.created_at|date:"d M Y" }}</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted mb-0">Manage all your tracked websites</p>
+    </div>
+    <a href="{% url 'websites:add' %}" class="btn btn-primary">
+        + Add Website
+    </a>
+</div>
+
+{% if websites %}
+<div class="row g-3">
+    {% for site in websites %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #4f46e5, #8b5cf6); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white;">
+                        🌐
                     </div>
-                    <div class="card-footer bg-white border-0">
-                        <a href="{% url 'websites:detail' site.pk %}" class="btn btn-sm btn-primary">View</a>
-                        <a href="{% url 'websites:edit' site.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        <a href="{% url 'websites:delete' site.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <h5 class="mb-1 fw-bold text-truncate">{{ site.name }}</h5>
+                        <a href="{{ site.domain }}" target="_blank" class="text-muted small text-truncate d-block">
+                            {{ site.domain }}
+                        </a>
                     </div>
                 </div>
+
+                <div class="d-flex gap-2 mb-3">
+                    <span class="badge bg-primary-soft text-primary">
+                        👁️ {{ site.total_views }} views
+                    </span>
+                </div>
+
+                <p class="text-muted mb-0" style="font-size: 12px;">
+                    Added {{ site.created_at|date:"d M Y" }}
+                </p>
             </div>
-            {% endfor %}
+
+            <div class="card-footer bg-white border-top d-flex gap-2">
+                <a href="{% url 'websites:detail' site.pk %}" class="btn btn-sm btn-primary flex-grow-1">
+                    View Analytics
+                </a>
+                <a href="{% url 'websites:edit' site.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <a href="{% url 'websites:delete' site.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+            </div>
         </div>
-    {% else %}
-        <div class="text-center p-5 bg-white rounded shadow-sm">
-            <h4>No websites yet 😕</h4>
-            <p class="text-muted">Add your first website to start tracking traffic.</p>
-            <a href="{% url 'websites:add' %}" class="btn btn-primary mt-2">+ Add Your First Website</a>
-        </div>
-    {% endif %}
+    </div>
+    {% endfor %}
 </div>
+
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon">🌐</div>
+            <h3>No websites yet</h3>
+            <p>Add your first website to start tracking visitors and analytics.</p>
+            <a href="{% url 'websites:add' %}" class="btn btn-primary">
+                + Add Your First Website
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

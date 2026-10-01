@@ -1,14 +1,15 @@
 from pathlib import Path
 from decouple import config
 import os
-import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ============ Security ============
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
+# ============ Applications ============
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -20,20 +21,20 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'corsheaders',
+    'django_celery_beat',
+    'django_celery_results',
 
     # Local apps
     'accounts',
     'websites',
     'analytics',
     'dashboard',
-    'django_celery_beat',
-    'django_celery_results',
 ]
 
+# ============ Middleware ============
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -44,6 +45,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+# ============ Templates ============
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -62,26 +64,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# ============ Database (SQLite for local) ============
 DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
-        conn_max_age=600,
-        ssl_require=True
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 # ============ Internationalization ============
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'Asia/Dhaka'          # ← ✅ এখানে TIME_ZONE define করা হলো
-
+TIME_ZONE = 'Asia/Dhaka'
 USE_I18N = True
 USE_TZ = True
 
 # ============ Static & Media ============
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -112,7 +112,6 @@ CACHES = {
     }
 }
 
-# Real-time visitor settings
 REALTIME_WINDOW = 300
 
 # ============ REST Framework ============
@@ -135,7 +134,7 @@ REST_FRAMEWORK = {
     },
 }
 
-# ============ Celery Configuration ============
+# ============ Celery ============
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
@@ -144,19 +143,20 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# ============ Email Configuration ============
+# ============ Email (from .env) ============
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'hratul838@gmail.com'
-EMAIL_HOST_PASSWORD = 'dhxn msrx maut zlfp'
-DEFAULT_FROM_EMAIL = 'Traffic Analyzer <hratul838@gmail.com>'   
-SITE_URL = 'http://127.0.0.1:8000'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Traffic Analyzer <noreply@example.com>')
+SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 
+# ============ Production Security (only when DEBUG=False) ============
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SESSION_COOKIE_SECURE = True

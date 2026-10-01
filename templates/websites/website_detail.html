@@ -1,475 +1,295 @@
 {% extends 'base.html' %}
 {% block title %}{{ website.name }} — Analytics{% endblock %}
+{% block page_title %}{{ website.name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4 mb-5">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap">
-        <div>
-            <h2 class="mb-1">{{ website.name }}</h2>
-            <a href="{{ website.domain }}" target="_blank" class="text-muted small">
-                {{ website.domain }} ↗
-            </a>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <div class="text-end me-3">
-                <div class="d-flex align-items-center">
-                    <span class="badge bg-success me-2" style="animation: pulse 2s infinite;">●</span>
-                    <span class="fs-4 fw-bold" id="rt-count">0</span>
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <a href="{{ website.domain }}" target="_blank" class="text-muted small">
+            {{ website.domain }} ↗
+        </a>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="text-end me-2">
+            <div class="d-flex align-items-center bg-white px-3 py-2 rounded-3 shadow-sm">
+                <span class="badge bg-success me-2" style="animation: pulse 2s infinite;">●</span>
+                <div>
+                    <div class="fw-bold fs-5 lh-1 mb-0" id="rt-count">0</div>
+                    <small class="text-muted" style="font-size: 11px;">Active Now</small>
                 </div>
-                <small class="text-muted">Active Now</small>
             </div>
-            <a href="{% url 'websites:edit' website.pk %}" class="btn btn-outline-secondary">Edit</a>
-            <a href="{% url 'websites:delete' website.pk %}" class="btn btn-outline-danger">Delete</a>
-            <a href="{% url 'websites:map' website.pk %}" class="btn btn-outline-primary">🗺️ Map</a>
+        </div>
+        <a href="{% url 'websites:map' website.pk %}" class="btn btn-outline-primary">🗺️ Map</a>
+        <a href="{% url 'websites:events' website.pk %}" class="btn btn-outline-primary">🎯 Events</a>
+        <a href="{% url 'websites:edit' website.pk %}" class="btn btn-outline-secondary">Edit</a>
+        <a href="{% url 'websites:delete' website.pk %}" class="btn btn-outline-danger">Delete</a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon primary">👁️</div>
+            <p class="stat-card-value">{{ total_views }}</p>
+            <p class="stat-card-label">Total Page Views</p>
+            <span class="stat-card-trend up">+{{ today_views }} today</span>
         </div>
     </div>
-
-    <!-- KPI Cards -->
-    <div class="row mb-3">
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0 p-3">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted mb-1 small">Total Page Views</p>
-                        <h3 class="mb-0 text-primary">{{ total_views }}</h3>
-                    </div>
-                    <div class="fs-2">👁️</div>
-                </div>
-                <small class="text-success mt-2">+{{ today_views }} today</small>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0 p-3">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted mb-1 small">Unique Visitors</p>
-                        <h3 class="mb-0 text-success">{{ unique_visitors }}</h3>
-                    </div>
-                    <div class="fs-2">👥</div>
-                </div>
-                <small class="text-success mt-2">+{{ today_visitors }} today</small>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0 p-3">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted mb-1 small">Last 7 Days Views</p>
-                        <h3 class="mb-0 text-warning">{{ week_views }}</h3>
-                    </div>
-                    <div class="fs-2">📅</div>
-                </div>
-                <small class="text-muted mt-2">{{ week_visitors }} visitors</small>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0 p-3">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted mb-1 small">Bounce Rate</p>
-                        <h3 class="mb-0 text-danger">{{ bounce_rate }}%</h3>
-                    </div>
-                    <div class="fs-2">📉</div>
-                </div>
-                <small class="text-muted mt-2">Single-page visits</small>
-            </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon success">👥</div>
+            <p class="stat-card-value">{{ unique_visitors }}</p>
+            <p class="stat-card-label">Unique Visitors</p>
+            <span class="stat-card-trend up">+{{ today_visitors }} today</span>
         </div>
     </div>
-
-    <!-- Main Chart -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <strong>📈 Traffic — Last 30 Days</strong>
-            <small class="text-muted">Auto-updates</small>
-        </div>
-        <div class="card-body">
-            <canvas id="mainChart" height="80"></canvas>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon warning">📅</div>
+            <p class="stat-card-value">{{ week_views }}</p>
+            <p class="stat-card-label">Last 7 Days</p>
+            <small class="text-muted">{{ week_visitors }} visitors</small>
         </div>
     </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon danger">📉</div>
+            <p class="stat-card-value">{{ bounce_rate }}%</p>
+            <p class="stat-card-label">Bounce Rate</p>
+            <small class="text-muted">Single-page visits</small>
+        </div>
+    </div>
+</div>
 
-    <!-- Breakdown Charts Row -->
-    <div class="row">
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white"><strong>🌐 Browsers</strong></div>
-                <div class="card-body">
-                    <canvas id="browserChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white"><strong>💻 Operating Systems</strong></div>
-                <div class="card-body">
-                    <canvas id="osChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white"><strong>📱 Devices</strong></div>
-                <div class="card-body">
-                    <canvas id="deviceChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white"><strong>🌍 Countries</strong></div>
-                <div class="card-body">
-                    <canvas id="countryChart"></canvas>
-                </div>
+<!-- Main Chart -->
+<div class="card mb-4">
+    <div class="card-header">📈 Traffic — Last 30 Days</div>
+    <div class="card-body">
+        <canvas id="mainChart" height="80"></canvas>
+    </div>
+</div>
+
+<!-- Breakdown Charts -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100">
+            <div class="card-header">🌐 Browsers</div>
+            <div class="card-body d-flex align-items-center">
+                <canvas id="browserChart"></canvas>
             </div>
         </div>
     </div>
-
-    <!-- Top Pages & Referrers -->
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white">
-                    <strong>🔥 Top Pages</strong>
-                </div>
-                <div class="card-body p-0">
-                    {% if top_pages %}
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>URL</th>
-                                <th class="text-end">Views</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for page in top_pages %}
-                            <tr>
-                                <td class="text-truncate" style="max-width: 300px;" title="{{ page.url }}">
-                                    {{ page.url }}
-                                </td>
-                                <td class="text-end"><span class="badge bg-primary">{{ page.views }}</span></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="text-muted text-center py-4 mb-0">No data yet</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white">
-                    <strong>🔗 Top Referrers</strong>
-                </div>
-                <div class="card-body p-0">
-                    {% if top_referrers %}
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Referrer</th>
-                                <th class="text-end">Visits</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ref in top_referrers %}
-                            <tr>
-                                <td class="text-truncate" style="max-width: 300px;" title="{{ ref.referrer }}">
-                                    {{ ref.referrer }}
-                                </td>
-                                <td class="text-end"><span class="badge bg-info">{{ ref.count }}</span></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="text-muted text-center py-4 mb-0">No referrer data yet</p>
-                    {% endif %}
-                </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100">
+            <div class="card-header">💻 OS</div>
+            <div class="card-body d-flex align-items-center">
+                <canvas id="osChart"></canvas>
             </div>
         </div>
     </div>
-
-    <!-- Recent Visitors -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white">
-            <strong>👥 Recent Visitors</strong>
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100">
+            <div class="card-header">📱 Devices</div>
+            <div class="card-body d-flex align-items-center">
+                <canvas id="deviceChart"></canvas>
+            </div>
         </div>
-        <div class="card-body p-0">
-            {% if recent_visitors %}
-            <div class="table-responsive">
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card h-100">
+            <div class="card-header">🌍 Countries</div>
+            <div class="card-body d-flex align-items-center">
+                <canvas id="countryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Pages & Referrers -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">🔥 Top Pages</div>
+            <div class="card-body p-0">
+                {% if top_pages %}
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
-                            <th>Visitor ID</th>
-                            <th>Country</th>
-                            <th>Browser</th>
-                            <th>OS</th>
-                            <th>Device</th>
-                            <th>IP</th>
-                            <th>Last Visit</th>
+                            <th>URL</th>
+                            <th class="text-end">Views</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for v in recent_visitors %}
+                        {% for page in top_pages %}
                         <tr>
-                            <td><code class="small">{{ v.visitor_id|truncatechars:16 }}</code></td>
-                            <td>{% if v.country %}<span class="badge bg-info">{{ v.country }}</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
-                            <td><small>{{ v.browser|default:"-" }}</small></td>
-                            <td><small>{{ v.os|default:"-" }}</small></td>
-                            <td><small>{{ v.device|default:"-" }}</small></td>
-                            <td><small class="text-muted">{{ v.ip_address|default:"-" }}</small></td>
-                            <td><small class="text-muted">{{ v.last_visit|timesince }} ago</small></td>
+                            <td class="text-truncate" style="max-width: 300px;" title="{{ page.url }}">{{ page.url }}</td>
+                            <td class="text-end"><span class="badge bg-primary">{{ page.views }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                {% else %}
+                <div class="empty-state py-4"><p class="text-muted mb-0">No data yet</p></div>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="text-muted text-center py-4 mb-0">No visitors yet</p>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Live Visitors -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <strong>⚡ Live Visitors</strong>
-            <small class="text-muted" id="rt-updated">Loading...</small>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">🔗 Top Referrers</div>
+            <div class="card-body p-0">
+                {% if top_referrers %}
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
-                            <th>Page</th>
-                            <th>Country</th>
-                            <th>Browser</th>
-                            <th>Device</th>
-                            <th>Seen</th>
+                            <th>Referrer</th>
+                            <th class="text-end">Visits</th>
                         </tr>
                     </thead>
-                    <tbody id="rt-body">
+                    <tbody>
+                        {% for ref in top_referrers %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-3">
-                                No active visitors right now
-                            </td>
+                            <td class="text-truncate" style="max-width: 300px;" title="{{ ref.referrer }}">{{ ref.referrer }}</td>
+                            <td class="text-end"><span class="badge bg-info">{{ ref.count }}</span></td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
+                {% else %}
+                <div class="empty-state py-4"><p class="text-muted mb-0">No referrer data yet</p></div>
+                {% endif %}
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Tracking Code -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-dark text-white">
-            <strong>📋 Tracking Code</strong>
+<!-- Recent Visitors -->
+<div class="card mb-4">
+    <div class="card-header">👥 Recent Visitors</div>
+    <div class="card-body p-0">
+        {% if recent_visitors %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Visitor ID</th>
+                        <th>Country</th>
+                        <th>Browser</th>
+                        <th>OS</th>
+                        <th>Device</th>
+                        <th>IP</th>
+                        <th>Last Visit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in recent_visitors %}
+                    <tr>
+                        <td><code class="small">{{ v.visitor_id|truncatechars:16 }}</code></td>
+                        <td>{% if v.country %}<span class="badge bg-info">{{ v.country }}</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                        <td><small>{{ v.browser|default:"-" }}</small></td>
+                        <td><small>{{ v.os|default:"-" }}</small></td>
+                        <td><small>{{ v.device|default:"-" }}</small></td>
+                        <td><small class="text-muted">{{ v.ip_address|default:"-" }}</small></td>
+                        <td><small class="text-muted">{{ v.last_visit|timesince }} ago</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="card-body">
-            <p class="text-muted small">
-                Paste before <code>&lt;/head&gt;</code> on every page of your site.
-            </p>
-            <div class="bg-light p-3 rounded border">
-                <pre class="mb-0" id="tracking-code" style="white-space: pre-wrap; word-break: break-all;">&lt;script 
+        {% else %}
+        <div class="empty-state py-4">
+            <p class="text-muted mb-0">No visitors yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Live Visitors -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>⚡ Live Visitors</span>
+        <small class="text-muted" id="rt-updated">Loading...</small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>Country</th>
+                        <th>Browser</th>
+                        <th>Device</th>
+                        <th>Seen</th>
+                    </tr>
+                </thead>
+                <tbody id="rt-body">
+                    <tr><td colspan="5" class="text-center text-muted py-4">No active visitors right now</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tracking Code -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">📋 Tracking Code</div>
+    <div class="card-body">
+        <p class="text-muted small">Paste before <code>&lt;/head&gt;</code> on every page of your site.</p>
+        <div class="bg-light p-3 rounded-3 border">
+            <pre class="mb-0" id="tracking-code" style="white-space: pre-wrap; word-break: break-all;">&lt;script 
     src="{{ tracking_url }}" 
     data-tracking-id="{{ website.tracking_id }}"&gt;
 &lt;/script&gt;</pre>
-            </div>
-            <button class="btn btn-primary mt-3 btn-sm" onclick="copyCode()">📎 Copy Code</button>
-            <span id="copy-status" class="text-success ms-2 small" style="display:none;">Copied!</span>
         </div>
+        <button class="btn btn-primary mt-3 btn-sm" onclick="copyCode()">📎 Copy Code</button>
+        <span id="copy-status" class="text-success ms-2 small" style="display:none;">✓ Copied!</span>
     </div>
+</div>
 
-    <!-- 📥 Export Data Card -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white">
-            <strong>📥 Export Data</strong>
+<!-- API Key -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">🔌 API Access</div>
+    <div class="card-body">
+        <p class="text-muted small">Use this API key to access your analytics data from external tools.</p>
+        <div class="input-group">
+            <input type="text" class="form-control font-monospace" value="{{ api_key.key }}" id="api-key-input" readonly>
+            <button class="btn btn-primary" onclick="copyApiKey()">📎 Copy</button>
         </div>
-        <div class="card-body">
-            <p class="text-muted small mb-3">
-                Download your analytics data as CSV files (works with Excel, Google Sheets, Python pandas).
-            </p>
-
-            <div class="row">
-                <!-- Date Range Selector -->
-                <div class="col-md-12 mb-3">
-                    <label class="form-label small fw-bold">Date Range:</label>
-                    <div class="btn-group w-100" role="group" id="range-group">
-                        <input type="radio" class="btn-check" name="range" id="range-7" value="7">
-                        <label class="btn btn-outline-primary btn-sm" for="range-7">Last 7 days</label>
-
-                        <input type="radio" class="btn-check" name="range" id="range-30" value="30" checked>
-                        <label class="btn btn-outline-primary btn-sm" for="range-30">Last 30 days</label>
-
-                        <input type="radio" class="btn-check" name="range" id="range-90" value="90">
-                        <label class="btn btn-outline-primary btn-sm" for="range-90">Last 90 days</label>
-
-                        <input type="radio" class="btn-check" name="range" id="range-365" value="365">
-                        <label class="btn btn-outline-primary btn-sm" for="range-365">Last year</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <a href="#" class="btn btn-success w-100" id="export-pageviews">
-                        <strong>👁️ PageViews</strong>
-                        <small class="d-block">All visit logs</small>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="#" class="btn btn-info w-100 text-white" id="export-visitors">
-                        <strong>👥 Visitors</strong>
-                        <small class="d-block">Visitor details</small>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="#" class="btn btn-warning w-100" id="export-stats">
-                        <strong>📊 Daily Stats</strong>
-                        <small class="d-block">Aggregated summary</small>
-                    </a>
-                </div>
-            </div>
-        </div>
+        <small class="text-muted">
+            Last used: {% if api_key.last_used %}{{ api_key.last_used|timesince }} ago{% else %}Never{% endif %}
+        </small>
     </div>
+</div>
 
-    <!-- 📧 Email Reports Card -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <strong>📧 Email Reports</strong>
-                <p class="text-muted small mb-0">
-                    Get automatic daily/weekly reports via email.
-                </p>
-            </div>
-            <a href="{% url 'websites:email-settings' website.pk %}" 
-            class="btn btn-outline-primary">
-                ⚙️ Configure →
-            </a>
-        </div>
-    </div>
-
-    <!-- 🎯 Custom Events Card -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-                <strong>🎯 Custom Events</strong>
-                <p class="text-muted small mb-0">
-                    Track button clicks, form submissions, purchases, video plays.
-                </p>
-            </div>
-            <a href="{% url 'websites:events' website.pk %}" 
-            class="btn btn-outline-primary">
-                View Events →
-            </a>
-        </div>
-    </div>
-
-    <!-- 🗺️ Live Map Card -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-                <strong>🗺️ Live Visitor Map</strong>
-                <p class="text-muted small mb-0">
-                    See where your visitors are coming from in real-time.
-                </p>
-            </div>
-            <a href="{% url 'websites:map' website.pk %}" 
-            class="btn btn-outline-primary">
-                Open Map →
-            </a>
-        </div>
-    </div>
-
-    <script>
-    (function() {
-        const baseUrls = {
-            pageviews: "{% url 'websites:export-pageviews' website.pk %}",
-            visitors: "{% url 'websites:export-visitors' website.pk %}",
-            stats: "{% url 'websites:export-stats' website.pk %}",
-        };
-
-        function getSelectedDays() {
-            const checked = document.querySelector('input[name="range"]:checked');
-            return checked ? checked.value : '30';
-        }
-
-        function updateLinks() {
-            const days = getSelectedDays();
-            document.getElementById('export-pageviews').href = `${baseUrls.pageviews}?days=${days}`;
-            document.getElementById('export-visitors').href = `${baseUrls.visitors}?days=${days}`;
-            document.getElementById('export-stats').href = `${baseUrls.stats}?days=${days}`;
-        }
-
-        <div class="card shadow-sm border-0 mb-3">
+<!-- Email Report & Export -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <strong>📧 Email Reports</strong>
-                    <p class="text-muted small mb-0">
-                        Get automatic daily/weekly reports via email.
-                    </p>
+                    <p class="text-muted small mb-0">Get automatic reports via email.</p>
                 </div>
-                <a href="{% url 'websites:email-settings' website.pk %}" 
-                class="btn btn-outline-primary">
-                    Configure →
-                </a>
+                <a href="{% url 'websites:email-settings' website.pk %}" class="btn btn-outline-primary btn-sm">Configure</a>
             </div>
-        </div>
-        
-        // Update links when range changes
-        document.querySelectorAll('input[name="range"]').forEach(el => {
-            el.addEventListener('change', updateLinks);
-        });
-
-        // Initial update
-        updateLinks();
-    })();
-    </script>
-
-    <!-- 🔌 API Key Card -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-dark text-white">
-            <strong>🔌 API Access</strong>
-        </div>
-        <div class="card-body">
-            <p class="text-muted small">
-                Use this API key to access your analytics data from external tools.
-            </p>
-            <div class="input-group">
-                <input type="text" class="form-control font-monospace" 
-                    value="{{ api_key.key }}" id="api-key-input" readonly>
-                <button class="btn btn-primary" onclick="copyApiKey()">📎 Copy</button>
-            </div>
-            <small class="text-muted">
-                Last used: 
-                {% if api_key.last_used %}
-                    {{ api_key.last_used|timesince }} ago
-                {% else %}
-                    Never
-                {% endif %}
-            </small>
-
-            <hr>
-            <p class="mb-2"><strong>Quick example:</strong></p>
-            <pre class="bg-light p-2 rounded small mb-0">curl -H "Authorization: Api-Key {{ api_key.key }}" \
-    {{ request.scheme }}://{{ request.get_host }}/api/v1/websites/{{ website.id }}/stats/</pre>
         </div>
     </div>
-
-    <script>
-    function copyApiKey() {
-        const input = document.getElementById('api-key-input');
-        input.select();
-        navigator.clipboard.writeText(input.value).then(() => {
-            alert('API Key copied!');
-        });
-    }
-    </script>
-
-    <a href="{% url 'websites:list' %}" class="btn btn-outline-secondary">← Back to All Websites</a>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <strong>📥 Export Data</strong>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <a href="{% url 'websites:export-pageviews' website.pk %}" class="btn btn-sm btn-outline-success">PageViews</a>
+                    <a href="{% url 'websites:export-visitors' website.pk %}" class="btn btn-sm btn-outline-info">Visitors</a>
+                    <a href="{% url 'websites:export-stats' website.pk %}" class="btn btn-sm btn-outline-warning">Stats</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -479,17 +299,19 @@
 }
 .new-visitor { animation: highlight 2s ease-out; }
 @keyframes highlight {
-    from { background-color: #fff3cd; }
+    from { background-color: #fef3c7; }
     to { background-color: transparent; }
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const websiteId = {{ website.id }};
+const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'];
 
-// ============ Copy code ============
 function copyCode() {
     const code = document.getElementById('tracking-code').innerText;
     navigator.clipboard.writeText(code).then(() => {
@@ -499,7 +321,15 @@ function copyCode() {
     });
 }
 
-// ============ Realtime polling ============
+function copyApiKey() {
+    const input = document.getElementById('api-key-input');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+        alert('API Key copied!');
+    });
+}
+
+// Realtime
 let previousRtIds = new Set();
 
 function timeAgo(iso) {
@@ -521,15 +351,13 @@ function fetchRt() {
         .then(r => r.json())
         .then(data => {
             document.getElementById('rt-count').textContent = data.count;
-            document.getElementById('rt-updated').textContent =
-                'Updated ' + new Date().toLocaleTimeString();
+            document.getElementById('rt-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
 
             const tbody = document.getElementById('rt-body');
             tbody.innerHTML = '';
 
             if (data.visitors.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">
-                    No active visitors right now</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No active visitors right now</td></tr>`;
                 previousRtIds = new Set();
                 return;
             }
@@ -540,7 +368,6 @@ function fetchRt() {
                 const isNew = !previousRtIds.has(v.visitor_id);
                 const tr = document.createElement('tr');
                 if (isNew) tr.className = 'new-visitor';
-
                 const shortUrl = v.url ? new URL(v.url).pathname : '/';
                 tr.innerHTML = `
                     <td>
@@ -554,55 +381,39 @@ function fetchRt() {
                 `;
                 tbody.appendChild(tr);
             });
-
             previousRtIds = currentIds;
-        })
-        .catch(err => console.error('RT error:', err));
+        });
 }
 
 fetchRt();
 setInterval(fetchRt, 5000);
 
-
-// ============ Stats API + Charts ============
-const COLORS = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c', '#34495e'];
-
+// Charts
 function makeDoughnut(id, labels, counts) {
-    if (!labels.length) return;
+    if (!labels || !labels.length) return;
     const el = document.getElementById(id);
     if (!el) return;
     new Chart(el, {
         type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{ data: counts, backgroundColor: COLORS }]
-        },
+        data: { labels: labels, datasets: [{ data: counts, backgroundColor: COLORS }] },
         options: {
             responsive: true,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
-            }
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
         }
     });
 }
 
 function makeBar(id, labels, counts, color) {
-    if (!labels.length) return;
+    if (!labels || !labels.length) return;
     const el = document.getElementById(id);
     if (!el) return;
     new Chart(el, {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: counts,
-                backgroundColor: color || '#3498db',
-            }]
-        },
+        data: { labels: labels, datasets: [{ data: counts, backgroundColor: color || '#4f46e5' }] },
         options: {
             responsive: true,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
+            scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
         }
     });
 }
@@ -610,7 +421,6 @@ function makeBar(id, labels, counts, color) {
 fetch(`/api/website/${websiteId}/stats/`)
     .then(r => r.json())
     .then(data => {
-        // Main line chart
         new Chart(document.getElementById('mainChart'), {
             type: 'line',
             data: {
@@ -618,8 +428,8 @@ fetch(`/api/website/${websiteId}/stats/`)
                 datasets: [{
                     label: 'Page Views',
                     data: data.daily_counts,
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
                     fill: true,
                     tension: 0.4,
                     borderWidth: 3,
@@ -628,18 +438,17 @@ fetch(`/api/website/${websiteId}/stats/`)
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } },
+                scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
                 interaction: { intersect: false, mode: 'index' }
             }
         });
 
-        // Breakdown charts
         makeDoughnut('browserChart', data.browsers.labels, data.browsers.counts);
         makeDoughnut('osChart', data.os.labels, data.os.counts);
         makeDoughnut('deviceChart', data.devices.labels, data.devices.counts);
-        makeBar('countryChart', data.countries.labels, data.countries.counts, '#2ecc71');
-    })
-    .catch(err => console.error('Stats error:', err));
+        makeBar('countryChart', data.countries.labels, data.countries.counts, '#10b981');
+    });
 </script>
 {% endblock %}

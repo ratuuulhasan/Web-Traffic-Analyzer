@@ -1,166 +1,151 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
 
 {% if user.is_authenticated %}
-<div class="mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h2>🚀 Welcome, {{ user.username }}!</h2>
-            <p class="text-muted mb-0">Your Traffic Analyzer dashboard</p>
-        </div>
-        <div class="text-end">
-            <div class="d-flex align-items-center">
-                <span class="badge bg-success me-2" style="animation: pulse 2s infinite;">●</span>
-                <div>
-                    <div class="fw-bold fs-4 mb-0" id="realtime-count">0</div>
-                    <small class="text-muted">Active Now</small>
-                </div>
+
+<!-- Welcome Header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="mb-1 fw-bold">👋 Welcome back, {{ user.username }}!</h2>
+        <p class="text-muted mb-0">Here's what's happening with your websites today.</p>
+    </div>
+    <div class="text-end">
+        <div class="d-flex align-items-center bg-white px-3 py-2 rounded-3 shadow-sm">
+            <span class="badge bg-success me-2" style="animation: pulse 2s infinite;">●</span>
+            <div>
+                <div class="fw-bold fs-5 lh-1 mb-0" id="realtime-count">0</div>
+                <small class="text-muted" style="font-size: 11px;">Active Now</small>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Stat Cards -->
-    <div class="row mt-4">
-        <div class="col-md-4 mb-3">
-            <div class="card text-center p-3 shadow-sm border-0">
-                <h3 class="text-primary mb-0" id="stat-websites">-</h3>
-                <p class="mb-0 text-muted">Websites</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-center p-3 shadow-sm border-0">
-                <h3 class="text-success mb-0" id="stat-visitors">-</h3>
-                <p class="mb-0 text-muted">Unique Visitors</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-center p-3 shadow-sm border-0">
-                <h3 class="text-warning mb-0" id="stat-views">-</h3>
-                <p class="mb-0 text-muted">Total Page Views</p>
-            </div>
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon primary">🌐</div>
+            <p class="stat-card-value" id="stat-websites">-</p>
+            <p class="stat-card-label">Total Websites</p>
         </div>
     </div>
-
-    <!-- 🌐 Realtime Visitors Panel -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <strong>⚡ Live Visitors</strong>
-            <small class="text-muted" id="realtime-updated">Loading...</small>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="realtime-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Page</th>
-                            <th>Country</th>
-                            <th>Browser</th>
-                            <th>Device</th>
-                            <th>Seen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="realtime-body">
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-3">
-                                No active visitors right now
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon success">👥</div>
+            <p class="stat-card-value" id="stat-visitors">-</p>
+            <p class="stat-card-label">Unique Visitors</p>
         </div>
     </div>
-
-    <!-- Charts -->
-    <div class="row mt-3">
-        <div class="col-md-8 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <strong>📈 Last 7 Days Traffic</strong>
-                </div>
-                <div class="card-body">
-                    <canvas id="dailyChart" height="120"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <strong>🌐 Browsers</strong>
-                </div>
-                <div class="card-body">
-                    <canvas id="browserChart"></canvas>
-                </div>
-            </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon warning">👁️</div>
+            <p class="stat-card-value" id="stat-views">-</p>
+            <p class="stat-card-label">Total Page Views</p>
         </div>
     </div>
-
-    <div class="row mt-2">
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <strong>🌍 Top Countries</strong>
-                </div>
-                <div class="card-body">
-                    <canvas id="countryChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <strong>📋 Country List</strong>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush" id="country-list">
-                        <li class="list-group-item text-muted">No data yet</li>
-                    </ul>
-                </div>
-            </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon info">⚡</div>
+            <p class="stat-card-value" id="stat-realtime">-</p>
+            <p class="stat-card-label">Active Visitors</p>
         </div>
     </div>
+</div>
 
-    {% if user.websites.all %}
-    <div class="card shadow-sm border-0 mt-3 mb-3">
-        <div class="card-header bg-white">
-            <strong>🌐 Quick Access — Your Websites</strong>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                {% for site in user.websites.all %}
-                <div class="col-md-6 mb-3">
-                    <div class="card border shadow-sm h-100">
-                        <div class="card-body p-3">
-                            <h6 class="mb-1">{{ site.name }}</h6>
-                            <p class="text-muted small mb-3">{{ site.domain|truncatechars:40 }}</p>
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="{% url 'websites:detail' site.pk %}" 
-                                class="btn btn-sm btn-outline-primary">
-                                    📊 Dashboard
-                                </a>
-                                <a href="{% url 'websites:events' site.pk %}" 
-                                class="btn btn-sm btn-outline-primary">
-                                    🎯 Events
-                                </a>
-                                <a href="{% url 'websites:email-settings' site.pk %}" 
-                                class="btn btn-sm btn-outline-secondary">
-                                    📧 Email
-                                </a>
-                            </div>
+<!-- Quick Access - Websites -->
+{% if user.websites.all %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>🌐 Your Websites</span>
+        <a href="{% url 'websites:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for site in user.websites.all %}
+            <div class="col-md-4">
+                <a href="{% url 'websites:detail' site.pk %}" class="d-block p-3 rounded-3 text-decoration-none border" 
+                   style="transition: all 0.2s; background: white;"
+                   onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)';"
+                   onmouseout="this.style.borderColor='var(--gray-200)'; this.style.transform='translateY(0)';">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div style="width: 36px; height: 36px; background: rgba(79, 70, 229, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            📊
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="fw-bold text-dark text-truncate">{{ site.name }}</div>
+                            <div class="text-muted small text-truncate">{{ site.domain }}</div>
                         </div>
                     </div>
-                </div>
-                {% endfor %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon">🌐</div>
+            <h3>No websites yet</h3>
+            <p>Add your first website to start tracking visitors and analytics.</p>
+            <a href="{% url 'websites:add' %}" class="btn btn-primary">+ Add Your First Website</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Live Visitors Table -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>⚡ Live Visitors</span>
+        <small class="text-muted" id="realtime-updated">Loading...</small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>Country</th>
+                        <th>Browser</th>
+                        <th>Device</th>
+                        <th>Seen</th>
+                    </tr>
+                </thead>
+                <tbody id="realtime-body">
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No active visitors right now
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">📈 Traffic — Last 7 Days</div>
+            <div class="card-body">
+                <canvas id="dailyChart" height="100"></canvas>
             </div>
         </div>
     </div>
-    {% endif %}
-
-    <a href="/websites/" class="btn btn-primary mt-3 mb-5">Manage Websites</a>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">🌐 Top Browsers</div>
+            <div class="card-body d-flex align-items-center">
+                <canvas id="browserChart"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -168,71 +153,67 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(1.3); }
 }
-.new-visitor {
-    animation: highlight 2s ease-out;
-}
+.new-visitor { animation: highlight 2s ease-out; }
 @keyframes highlight {
-    from { background-color: #fff3cd; }
+    from { background-color: #fef3c7; }
     to { background-color: transparent; }
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% else %}
+<!-- Guest View -->
+<div class="text-center py-5">
+    <div style="font-size: 80px; margin-bottom: 20px;">📊</div>
+    <h1 class="fw-bold mb-3">Traffic Analyzer</h1>
+    <p class="text-muted fs-5 mb-4">Track your website traffic with real-time analytics, custom events, and beautiful reports.</p>
+    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg me-2">Get Started Free</a>
+    <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-lg">Login</a>
+</div>
+{% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ============ REALTIME VISITOR POLLING ============
+{% if user.is_authenticated %}
 let previousVisitorIds = new Set();
 
-function timeAgo(isoString) {
-    const now = new Date();
-    const then = new Date(isoString);
-    const seconds = Math.floor((now - then) / 1000);
-    if (seconds < 60) return seconds + 's ago';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm ago';
-    const hours = Math.floor(minutes / 60);
-    return hours + 'h ago';
+function timeAgo(iso) {
+    const s = Math.floor((new Date() - new Date(iso)) / 1000);
+    if (s < 60) return s + 's ago';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ago';
+    return Math.floor(m / 60) + 'h ago';
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
 }
 
 function fetchRealtime() {
     fetch('/api/realtime/')
-        .then(res => res.json())
+        .then(r => r.json())
         .then(data => {
-            // Update count with animated pulse
-            const countEl = document.getElementById('realtime-count');
-            countEl.textContent = data.count;
+            document.getElementById('realtime-count').textContent = data.count;
+            document.getElementById('stat-realtime').textContent = data.count;
+            document.getElementById('realtime-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
 
-            const updatedEl = document.getElementById('realtime-updated');
-            updatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
-
-            // Update table
             const tbody = document.getElementById('realtime-body');
             tbody.innerHTML = '';
 
             if (data.visitors.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-3">
-                            No active visitors right now
-                        </td>
-                    </tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No active visitors right now</td></tr>`;
                 previousVisitorIds = new Set();
                 return;
             }
 
             const currentIds = new Set();
-
             data.visitors.forEach(v => {
-                const vid = v.visitor_id;
-                currentIds.add(vid);
-                const isNew = !previousVisitorIds.has(vid);
-
+                currentIds.add(v.visitor_id);
+                const isNew = !previousVisitorIds.has(v.visitor_id);
                 const tr = document.createElement('tr');
                 if (isNew) tr.className = 'new-visitor';
 
@@ -250,28 +231,21 @@ function fetchRealtime() {
                 `;
                 tbody.appendChild(tr);
             });
-
             previousVisitorIds = currentIds;
-        })
-        .catch(err => {
-            console.error('Realtime fetch error:', err);
         });
 }
 
-// Fetch immediately, then every 5 seconds
 fetchRealtime();
 setInterval(fetchRealtime, 5000);
 
-
-// ============ STATS + CHARTS ============
+// Stats
 fetch('/api/stats/')
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
         document.getElementById('stat-websites').innerText = data.total_websites;
         document.getElementById('stat-visitors').innerText = data.total_visitors;
         document.getElementById('stat-views').innerText = data.total_views;
 
-        // Daily chart
         new Chart(document.getElementById('dailyChart'), {
             type: 'line',
             data: {
@@ -279,21 +253,22 @@ fetch('/api/stats/')
                 datasets: [{
                     label: 'Page Views',
                     data: data.daily_counts,
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
                     fill: true,
                     tension: 0.4,
                     borderWidth: 3,
+                    pointRadius: 3,
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
+                scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
             }
         });
 
-        // Browser chart
         if (data.browsers && data.browsers.labels.length > 0) {
             new Chart(document.getElementById('browserChart'), {
                 type: 'doughnut',
@@ -301,51 +276,16 @@ fetch('/api/stats/')
                     labels: data.browsers.labels,
                     datasets: [{
                         data: data.browsers.counts,
-                        backgroundColor: ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6']
-                    }]
-                }
-            });
-        }
-
-        // Country chart
-        if (data.countries && data.countries.labels.length > 0) {
-            new Chart(document.getElementById('countryChart'), {
-                type: 'bar',
-                data: {
-                    labels: data.countries.labels,
-                    datasets: [{
-                        label: 'Visitors',
-                        data: data.countries.counts,
-                        backgroundColor: '#2ecc71',
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#06b6d4']
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
                 }
             });
-
-            const list = document.getElementById('country-list');
-            list.innerHTML = '';
-            data.countries.labels.forEach((country, i) => {
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between';
-                li.innerHTML = `<span>🌍 ${country}</span><span class="badge bg-primary">${data.countries.counts[i]}</span>`;
-                list.appendChild(li);
-            });
         }
-    })
-    .catch(err => console.error('Stats error:', err));
-</script>
-
-{% else %}
-<div class="text-center mt-5">
-    <h1>📊 Traffic Analyzer</h1>
-    <p class="text-muted">Track your website traffic with ease.</p>
-    <a href="/accounts/register/" class="btn btn-primary btn-lg mt-3">Get Started Free</a>
-    <a href="/accounts/login/" class="btn btn-outline-secondary btn-lg mt-3">Login</a>
-</div>
+    });
 {% endif %}
-
+</script>
 {% endblock %}

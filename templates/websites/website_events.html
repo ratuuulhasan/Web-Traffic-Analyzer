@@ -1,161 +1,140 @@
 {% extends 'base.html' %}
 {% block title %}Events - {{ website.name }}{% endblock %}
+{% block page_title %}Custom Events{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4 mb-5">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0">🎯 Custom Events</h2>
-            <a href="{% url 'websites:detail' website.pk %}" class="text-muted small">
-                {{ website.name }} dashboard →
-            </a>
-        </div>
-        <a href="{% url 'websites:detail' website.pk %}" class="btn btn-outline-secondary">
-            ← Back
-        </a>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">Track button clicks, form submissions, and custom actions</p>
+    <a href="{% url 'websites:detail' website.pk %}" class="btn btn-outline-secondary">← Back</a>
+</div>
 
-    <!-- KPI Cards -->
-    <div class="row mb-3">
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 p-3 text-center">
-                <h3 class="text-primary mb-1">{{ total_events }}</h3>
-                <p class="text-muted mb-0 small">Total Events</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 p-3 text-center">
-                <h3 class="text-success mb-1">{{ unique_event_types }}</h3>
-                <p class="text-muted mb-0 small">Unique Event Types</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 p-3 text-center">
-                <h3 class="text-warning mb-1" id="last24h">-</h3>
-                <p class="text-muted mb-0 small">Last 24 Hours</p>
-            </div>
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-card-icon primary">🎯</div>
+            <p class="stat-card-value">{{ total_events }}</p>
+            <p class="stat-card-label">Total Events</p>
         </div>
     </div>
-
-    <!-- Chart -->
-    <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white">
-            <strong>📈 Events — Last 30 Days</strong>
-        </div>
-        <div class="card-body">
-            <canvas id="eventsChart" height="80"></canvas>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-card-icon success">📊</div>
+            <p class="stat-card-value">{{ unique_event_types }}</p>
+            <p class="stat-card-label">Unique Event Types</p>
         </div>
     </div>
-
-    <!-- Top Events + Table -->
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white">
-                    <strong>🏆 Top Events</strong>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush" id="top-events-list">
-                        {% if top_events %}
-                            {% for e in top_events %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center event-filter-btn"
-                                 data-event="{{ e.name }}" style="cursor: pointer;">
-                                <span><code>{{ e.name }}</code></span>
-                                <span class="badge bg-primary">{{ e.count }}</span>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="list-group-item text-muted text-center py-4">
-                                No events yet
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <strong>📋 Event Log</strong>
-                    <div>
-                        <span id="filter-label" class="badge bg-secondary me-2" style="display:none;"></span>
-                        <button class="btn btn-sm btn-outline-secondary" id="clear-filter" style="display:none;">
-                            Clear
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th>Event</th>
-                                    <th>Properties</th>
-                                    <th>Visitor</th>
-                                    <th>Country</th>
-                                    <th>When</th>
-                                </tr>
-                            </thead>
-                            <tbody id="events-table-body">
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        Loading...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-                    <small class="text-muted" id="pagination-info"></small>
-                    <div>
-                        <button class="btn btn-sm btn-outline-primary" id="prev-page" disabled>← Prev</button>
-                        <button class="btn btn-sm btn-outline-primary" id="next-page" disabled>Next →</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Usage Documentation -->
-    <div class="card shadow-sm border-0 mt-3">
-        <div class="card-header bg-dark text-white">
-            <strong>📘 How to Track Events (For Your Website)</strong>
-        </div>
-        <div class="card-body">
-            <p class="text-muted small">
-                Add the tracking script first (already shown in your website dashboard). Then use:
-            </p>
-
-            <h6 class="mt-3">1. Manual Tracking</h6>
-            <pre class="bg-light p-3 rounded"><code>// Button click
-&lt;button onclick="trackEvent('signup_click', {button: 'header_cta'})"&gt;Sign Up&lt;/button&gt;
-
-// Purchase
-trackEvent('purchase', {amount: 99, currency: 'USD', product: 'Pro Plan'});
-
-// Video play
-trackEvent('video_play', {video_id: 'abc123', duration: 120});</code></pre>
-
-            <h6 class="mt-3">2. Auto-tracking with data attribute</h6>
-            <pre class="bg-light p-3 rounded"><code>&lt;button data-ta-event="cta_click"&gt;Click Me&lt;/button&gt;
-&lt;a href="/pricing" data-ta-event="view_pricing"&gt;See Pricing&lt;/a&gt;</code></pre>
-
-            <h6 class="mt-3">3. What's tracked automatically</h6>
-            <ul class="small">
-                <li>✅ <strong>Form submissions</strong> → <code>form_submit</code> event</li>
-                <li>✅ <strong>Outbound link clicks</strong> → <code>outbound_click</code> event</li>
-                <li>✅ Any element with <code>data-ta-event</code> attribute</li>
-            </ul>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-card-icon warning">⚡</div>
+            <p class="stat-card-value" id="last24h">-</p>
+            <p class="stat-card-label">Last 24 Hours</p>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart -->
+<div class="card mb-4">
+    <div class="card-header">📈 Events — Last 30 Days</div>
+    <div class="card-body">
+        <canvas id="eventsChart" height="80"></canvas>
+    </div>
+</div>
 
+<div class="row g-3">
+    <!-- Top Events -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">🏆 Top Events</div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="top-events-list">
+                    {% if top_events %}
+                        {% for e in top_events %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center event-filter-btn" data-event="{{ e.name }}" style="cursor: pointer;">
+                            <code class="small">{{ e.name }}</code>
+                            <span class="badge bg-primary">{{ e.count }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="list-group-item text-muted text-center py-4 small">No events yet</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Log -->
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>📋 Event Log</span>
+                <div>
+                    <span id="filter-label" class="badge bg-secondary me-2" style="display:none;"></span>
+                    <button class="btn btn-sm btn-outline-secondary" id="clear-filter" style="display:none;">Clear</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white">
+                            <tr>
+                                <th>Event</th>
+                                <th>Properties</th>
+                                <th>Visitor</th>
+                                <th>Country</th>
+                                <th>When</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-table-body">
+                            <tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                <small class="text-muted" id="pagination-info"></small>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" id="prev-page" disabled>← Prev</button>
+                    <button class="btn btn-sm btn-outline-primary" id="next-page" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documentation -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">📘 How to Track Events</div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">After installing the tracking script, use these methods:</p>
+
+        <h6 class="mt-3">Manual Tracking</h6>
+        <pre class="bg-light p-3 rounded-3"><code>// Button click
+&lt;button onclick="trackEvent('signup_click', {button: 'header_cta'})"&gt;Sign Up&lt;/button&gt;
+
+// Purchase
+trackEvent('purchase', {amount: 99, currency: 'USD'});
+
+// Video play
+trackEvent('video_play', {video_id: 'abc123'});</code></pre>
+
+        <h6 class="mt-3">Auto-tracking</h6>
+        <pre class="bg-light p-3 rounded-3"><code>&lt;button data-ta-event="cta_click"&gt;Click Me&lt;/button&gt;</code></pre>
+
+        <h6 class="mt-3">What's tracked automatically</h6>
+        <ul class="small mb-0">
+            <li>✅ Form submissions → <code>form_submit</code></li>
+            <li>✅ Outbound links → <code>outbound_click</code></li>
+            <li>✅ Elements with <code>data-ta-event</code></li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const websiteId = {{ website.id }};
 let currentFilter = '';
@@ -177,7 +156,6 @@ function timeAgo(iso) {
     return Math.floor(h / 24) + 'd ago';
 }
 
-// ============ Load events table ============
 function loadEvents(page) {
     if (page) currentPage = page;
     const url = `/api/website/${websiteId}/events/list/?page=${currentPage}` +
@@ -195,8 +173,7 @@ function loadEvents(page) {
             } else {
                 data.events.forEach(e => {
                     const propsStr = Object.keys(e.properties || {}).length
-                        ? JSON.stringify(e.properties).slice(0, 60)
-                        : '-';
+                        ? JSON.stringify(e.properties).slice(0, 60) : '-';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><code class="small">${escapeHtml(e.name)}</code></td>
@@ -216,20 +193,16 @@ function loadEvents(page) {
 
             document.getElementById('prev-page').onclick = () => loadEvents(data.page - 1);
             document.getElementById('next-page').onclick = () => loadEvents(data.page + 1);
-        })
-        .catch(err => console.error('Events load error:', err));
+        });
 }
 
-// ============ Load stats + chart ============
 function loadStats() {
     fetch(`/api/website/${websiteId}/events/`)
         .then(r => r.json())
         .then(data => {
-            // Last 24h count (from daily, last element)
             const last24 = data.daily_counts[data.daily_counts.length - 1] || 0;
             document.getElementById('last24h').textContent = last24;
 
-            // Chart
             new Chart(document.getElementById('eventsChart'), {
                 type: 'line',
                 data: {
@@ -237,8 +210,8 @@ function loadStats() {
                     datasets: [{
                         label: 'Events',
                         data: data.daily_counts,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
                         fill: true,
                         tension: 0.4,
                         borderWidth: 3,
@@ -247,16 +220,14 @@ function loadStats() {
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } },
-                    interaction: { intersect: false, mode: 'index' }
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
                 }
             });
-        })
-        .catch(err => console.error('Stats error:', err));
+        });
 }
 
-// ============ Filter by event name ============
 document.querySelectorAll('.event-filter-btn').forEach(el => {
     el.addEventListener('click', () => {
         currentFilter = el.dataset.event;
@@ -276,7 +247,6 @@ document.getElementById('clear-filter').addEventListener('click', () => {
     loadEvents(1);
 });
 
-// ============ Init ============
 loadStats();
 loadEvents(1);
 </script>

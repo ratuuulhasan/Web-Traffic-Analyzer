@@ -1,54 +1,45 @@
-{% extends 'base.html' %}
-{% block title %}Register{% endblock %}
+{% extends 'auth_base.html' %}
+{% block title %}Register — Traffic Analyzer{% endblock %}
 
 {% block content %}
-<div class="auth-card">
-    <h2>📝 Create Account</h2>
+<h2 class="auth-title">Create account 🚀</h2>
+<p class="auth-subtitle">Start tracking your website traffic</p>
 
-    <form method="POST">
-        {% csrf_token %}
+<form method="POST" class="auth-form">
+    {% csrf_token %}
 
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-        {% endif %}
+    {% if form.non_field_errors %}
+        <div class="auth-error">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
 
-        <div class="mb-3">
-            <label class="form-label">Username</label>
-            {{ form.username }}
-            {% if form.username.errors %}
-                <small class="text-danger">{{ form.username.errors.0 }}</small>
-            {% endif %}
-        </div>
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<small class="text-danger">{{ form.username.errors.0 }}</small>{% endif %}
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            {{ form.email }}
-            {% if form.email.errors %}
-                <small class="text-danger">{{ form.email.errors.0 }}</small>
-            {% endif %}
-        </div>
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}<small class="text-danger">{{ form.email.errors.0 }}</small>{% endif %}
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            {{ form.password1 }}
-            {% if form.password1.errors %}
-                <small class="text-danger">{{ form.password1.errors.0 }}</small>
-            {% endif %}
-        </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<small class="text-danger">{{ form.password1.errors.0 }}</small>{% endif %}
+    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Confirm Password</label>
-            {{ form.password2 }}
-            {% if form.password2.errors %}
-                <small class="text-danger">{{ form.password2.errors.0 }}</small>
-            {% endif %}
-        </div>
+    <div class="mb-3">
+        <label class="form-label">Confirm Password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<small class="text-danger">{{ form.password2.errors.0 }}</small>{% endif %}
+    </div>
 
-        <button type="submit" class="btn btn-primary w-100">Register</button>
-    </form>
+    <button type="submit" class="btn btn-primary auth-btn">Create Account →</button>
+</form>
 
-    <p class="text-center mt-3 mb-0">
-        Already have an account? <a href="{% url 'accounts:login' %}">Login here</a>
-    </p>
+<div class="auth-footer">
+    Already have an account? <a href="{% url 'accounts:login' %}">Login</a>
 </div>
 {% endblock %}
