@@ -362,3 +362,24 @@ def send_test_email(request, pk):
         messages.error(request, f"Failed: {result['message']}")
 
     return redirect('websites:email-settings', pk=website.pk)
+
+@login_required
+def website_events(request, pk):
+    website = get_object_or_404(Website, pk=pk, owner=request.user)
+
+    total_events = website.events.count()
+    unique_event_types = website.events.values('name').distinct().count()
+
+    # Top event names
+    top_events = list(
+        website.events.values('name')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:10]
+    )
+
+    return render(request, 'websites/website_events.html', {
+        'website': website,
+        'total_events': total_events,
+        'unique_event_types': unique_event_types,
+        'top_events': top_events,
+    })

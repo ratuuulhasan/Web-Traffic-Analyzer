@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from user_agents import parse
 from websites.models import Website
-from .models import Visitor, PageView
+from .models import Visitor, PageView, Event
 from django.db.models.functions import TruncDate
 from django.db.models import Count
 from datetime import timedelta
@@ -324,4 +324,147 @@ def website_stats_api(request, pk):
             'counts': [c['count'] for c in country_data],
         },
         'realtime_count': realtime_count,
+    })
+
+@csrf_exempt
+def track_event_view(request):
+    """Track custom events."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    tracking_id = data.get('tracking_id')
+    visitor_id = data.get('visitor_id')
+    event_name = data.get('event_name')
+    properties = data.get('properties', {})
+    url = data.get('url', '')
+
+    if not all([tracking_id, visitor_id, event_name]):
+        return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+    # Validate properties (must be dict, small)
+    if not isinstance(properties, dict):
+        properties = {}
+
+    # Limit properties size
+    properties = {str(k)[:50]: str(v)[:500] for k, v in list(properties.items())[:20]}
+
+    try:
+        website = Website.objects.get(tracking_id=tracking_id)
+    except Website.DoesNotExist:
+        return JsonResponse({'error': 'Invalid tracking id'}, status=404)
+
+    # Get or create visitor
+    visitor, _ = Visitor.objects.get_or_create(
+        visitor_id=visitor_id,
+        website=website,
+    )
+
+    # Save event
+    Event.objects.create(
+        website=website,
+        visitor=visitor,
+        name=event_name[:100],
+        properties=properties,
+        url=url[:500],
+    )
+
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+def website_events_api(request, pk):
+    """Get events data for a website."""
+    from websites.models import Website
+    from django.shortcuts import get_object_or_404
+
+    website = get_object_or_404(Website, pk=pk, owner=request.user)
+
+    # Optional: filter by event name
+    event_filter = request.GET.get('name', '').strip()
+
+    qs = Event.objects.filter(website=website)
+    if event_filter:
+        qs = qs.filter(name=event_filter)
+
+    # Top event names
+    top_events = list(
+        qs.values('name')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:10]
+    )
+
+    # Events per day (last 30 days)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    daily = (
+        qs.filter(timestamp__gte=thirty_days_ago)
+        .annotate(day=TruncDate('timestamp'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    daily_map = {item['day'].isoformat(): item['count'] for item in daily}
+
+    labels = []
+    counts = []
+    today = timezone.now().date()
+    for i in range(29, -1, -1):
+        day = today - timedelta(days=i)
+        labels.append(day.strftime('%d %b'))
+        counts.append(daily_map.get(day.isoformat(), 0))
+
+    return JsonResponse({
+        'total_events': qs.count(),
+        'unique_event_types': qs.values('name').distinct().count(),
+        'top_events': top_events,
+        'daily_labels': labels,
+        'daily_counts': counts,
+    })
+
+
+@login_required
+def website_events_list_api(request, pk):
+    """Paginated list of events (for table)."""
+    from websites.models import Website
+    from django.shortcuts import get_object_or_404
+    from django.core.paginator import Paginator
+
+    website = get_object_or_404(Website, pk=pk, owner=request.user)
+
+    qs = Event.objects.filter(website=website).select_related('visitor')
+
+    # Filter by event name
+    event_filter = request.GET.get('name', '').strip()
+    if event_filter:
+        qs = qs.filter(name=event_filter)
+
+    # Pagination
+    page_num = int(request.GET.get('page', 1))
+    page_size = 50
+    paginator = Paginator(qs, page_size)
+    page = paginator.get_page(page_num)
+
+    events = []
+    for e in page:
+        events.append({
+            'id': e.id,
+            'name': e.name,
+            'properties': e.properties,
+            'url': e.url,
+            'visitor_id': e.visitor.visitor_id if e.visitor else '',
+            'country': e.visitor.country if e.visitor else '',
+            'timestamp': e.timestamp.isoformat(),
+        })
+
+    return JsonResponse({
+        'events': events,
+        'page': page.number,
+        'total_pages': paginator.num_pages,
+        'total': paginator.count,
+        'has_next': page.has_next(),
+        'has_prev': page.has_previous(),
     })

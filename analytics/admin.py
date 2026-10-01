@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Visitor, PageView
+from .models import Visitor, PageView, Event
 
 
 @admin.register(Visitor)
@@ -13,3 +13,11 @@ class VisitorAdmin(admin.ModelAdmin):
 class PageViewAdmin(admin.ModelAdmin):
     list_display = ('website', 'url', 'visitor', 'timestamp')
     list_filter = ('website',)
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('name', 'website', 'visitor', 'timestamp')
+    list_filter = ('name', 'website', 'timestamp')
+    search_fields = ('name', 'visitor__visitor_id')
+    readonly_fields = ('timestamp',)
+    date_hierarchy = 'timestamp'
