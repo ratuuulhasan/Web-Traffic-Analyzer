@@ -33,7 +33,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon primary">👁️</div>
-            <p class="stat-card-value">{{ total_views }}</p>
+            <p class="stat-card-value" data-kpi="{{ total_views }}">{{ total_views }}</p>
             <p class="stat-card-label">Total Page Views</p>
             <span class="stat-card-trend up">+{{ today_views }} today</span>
         </div>
@@ -41,7 +41,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon success">👥</div>
-            <p class="stat-card-value">{{ unique_visitors }}</p>
+            <p class="stat-card-value" data-kpi="{{ unique_visitors }}">{{ unique_visitors }}</p>
             <p class="stat-card-label">Unique Visitors</p>
             <span class="stat-card-trend up">+{{ today_visitors }} today</span>
         </div>
@@ -49,7 +49,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon warning">📅</div>
-            <p class="stat-card-value">{{ week_views }}</p>
+            <p class="stat-card-value" data-kpi="{{ week_views }}">{{ week_views }}</p>
             <p class="stat-card-label">Last 7 Days</p>
             <small class="text-muted">{{ week_visitors }} visitors</small>
         </div>
@@ -57,7 +57,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon danger">📉</div>
-            <p class="stat-card-value">{{ bounce_rate }}%</p>
+            <p class="stat-card-value" data-kpi="{{ bounce_rate }}">{{ bounce_rate }}%</p>
             <p class="stat-card-label">Bounce Rate</p>
             <small class="text-muted">Single-page visits</small>
         </div>
@@ -312,6 +312,19 @@
 const websiteId = {{ website.id }};
 const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'];
 
+// ============ KPI Cards Number Animation ============
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.stat-card-value[data-kpi]').forEach((el, i) => {
+        const rawValue = el.getAttribute('data-kpi');
+        // Only animate pure numbers
+        if (/^\d+$/.test(rawValue)) {
+            setTimeout(() => {
+                animateNumber(el, rawValue, 1200);
+            }, i * 100);
+        }
+    });
+});
+
 function copyCode() {
     const code = document.getElementById('tracking-code').innerText;
     navigator.clipboard.writeText(code).then(() => {
@@ -329,7 +342,7 @@ function copyApiKey() {
     });
 }
 
-// Realtime
+// ============ Realtime ============
 let previousRtIds = new Set();
 
 function timeAgo(iso) {
@@ -350,7 +363,9 @@ function fetchRt() {
     fetch(`/api/realtime/${websiteId}/`)
         .then(r => r.json())
         .then(data => {
-            document.getElementById('rt-count').textContent = data.count;
+            // ✅ Realtime count animation
+            animateNumber(document.getElementById('rt-count'), data.count, 500);
+
             document.getElementById('rt-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
 
             const tbody = document.getElementById('rt-body');
@@ -388,7 +403,7 @@ function fetchRt() {
 fetchRt();
 setInterval(fetchRt, 5000);
 
-// Charts
+// ============ Charts ============
 function makeDoughnut(id, labels, counts) {
     if (!labels || !labels.length) return;
     const el = document.getElementById(id);
@@ -413,7 +428,10 @@ function makeBar(id, labels, counts, color) {
         options: {
             responsive: true,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+            scales: { 
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
+                x: { grid: { display: false } } 
+            }
         }
     });
 }
@@ -440,7 +458,10 @@ fetch(`/api/website/${websiteId}/stats/`)
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
+                    x: { grid: { display: false } } 
+                },
                 interaction: { intersect: false, mode: 'index' }
             }
         });

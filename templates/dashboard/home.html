@@ -28,28 +28,28 @@
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon primary">🌐</div>
-            <p class="stat-card-value" id="stat-websites">-</p>
+            <p class="stat-card-value" id="stat-websites">0</p>
             <p class="stat-card-label">Total Websites</p>
         </div>
     </div>
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon success">👥</div>
-            <p class="stat-card-value" id="stat-visitors">-</p>
+            <p class="stat-card-value" id="stat-visitors">0</p>
             <p class="stat-card-label">Unique Visitors</p>
         </div>
     </div>
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon warning">👁️</div>
-            <p class="stat-card-value" id="stat-views">-</p>
+            <p class="stat-card-value" id="stat-views">0</p>
             <p class="stat-card-label">Total Page Views</p>
         </div>
     </div>
     <div class="col-lg-3 col-md-6">
         <div class="stat-card">
             <div class="stat-card-icon info">⚡</div>
-            <p class="stat-card-value" id="stat-realtime">-</p>
+            <p class="stat-card-value" id="stat-realtime">0</p>
             <p class="stat-card-label">Active Visitors</p>
         </div>
     </div>
@@ -193,12 +193,15 @@ function escapeHtml(t) {
     return d.innerHTML;
 }
 
+// ============ Realtime ============
 function fetchRealtime() {
     fetch('/api/realtime/')
         .then(r => r.json())
         .then(data => {
-            document.getElementById('realtime-count').textContent = data.count;
-            document.getElementById('stat-realtime').textContent = data.count;
+            // ✅ Realtime count — number animation
+            animateNumber(document.getElementById('realtime-count'), data.count, 500);
+            animateNumber(document.getElementById('stat-realtime'), data.count, 500);
+
             document.getElementById('realtime-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
 
             const tbody = document.getElementById('realtime-body');
@@ -238,14 +241,16 @@ function fetchRealtime() {
 fetchRealtime();
 setInterval(fetchRealtime, 5000);
 
-// Stats
+// ============ Stats + Charts ============
 fetch('/api/stats/')
     .then(r => r.json())
     .then(data => {
-        document.getElementById('stat-websites').innerText = data.total_websites;
-        document.getElementById('stat-visitors').innerText = data.total_visitors;
-        document.getElementById('stat-views').innerText = data.total_views;
+        // ✅ Stat cards — number animation
+        animateNumber(document.getElementById('stat-websites'), data.total_websites, 1000);
+        animateNumber(document.getElementById('stat-visitors'), data.total_visitors, 1200);
+        animateNumber(document.getElementById('stat-views'), data.total_views, 1400);
 
+        // Daily chart
         new Chart(document.getElementById('dailyChart'), {
             type: 'line',
             data: {
@@ -265,10 +270,14 @@ fetch('/api/stats/')
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
+                    x: { grid: { display: false } } 
+                }
             }
         });
 
+        // Browser chart
         if (data.browsers && data.browsers.labels.length > 0) {
             new Chart(document.getElementById('browserChart'), {
                 type: 'doughnut',
