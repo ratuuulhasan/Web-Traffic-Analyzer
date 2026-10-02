@@ -66,16 +66,13 @@
         <div class="row g-3">
             {% for site in user.websites.all %}
             <div class="col-md-4">
-                <a href="{% url 'websites:detail' site.pk %}" class="d-block p-3 rounded-3 text-decoration-none border" 
-                   style="transition: all 0.2s; background: white;"
-                   onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)';"
-                   onmouseout="this.style.borderColor='var(--gray-200)'; this.style.transform='translateY(0)';">
+                <a href="{% url 'websites:detail' site.pk %}" class="website-quick-link d-block p-3 rounded-3 text-decoration-none border">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <div style="width: 36px; height: 36px; background: rgba(79, 70, 229, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 36px; height: 36px; background: rgba(79, 70, 229, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
                             📊
                         </div>
                         <div class="flex-grow-1 overflow-hidden">
-                            <div class="fw-bold text-dark text-truncate">{{ site.name }}</div>
+                            <div class="fw-bold text-truncate">{{ site.name }}</div>
                             <div class="text-muted small text-truncate">{{ site.domain }}</div>
                         </div>
                     </div>
