@@ -42,12 +42,16 @@
                 </p>
             </div>
 
-            <div class="card-footer bg-white border-top d-flex gap-2">
-                <a href="{% url 'websites:detail' site.pk %}" class="btn btn-sm btn-primary flex-grow-1">
-                    View Analytics
+            <div class="card-footer bg-white border-top d-flex gap-2 flex-nowrap">
+                <a href="{% url 'websites:detail' site.pk %}" class="btn btn-sm btn-primary flex-grow-1 text-nowrap">
+                    📊 Analytics
                 </a>
-                <a href="{% url 'websites:edit' site.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                <a href="{% url 'websites:delete' site.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                <a href="{% url 'websites:edit' site.pk %}" class="btn btn-sm btn-outline-secondary">
+                    Edit
+                </a>
+                <a href="{% url 'websites:delete' site.pk %}" class="btn btn-sm btn-outline-danger">
+                    Delete
+                </a>
             </div>
         </div>
     </div>

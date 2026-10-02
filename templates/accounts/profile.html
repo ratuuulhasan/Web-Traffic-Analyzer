@@ -28,19 +28,19 @@
                 <table class="table mb-0">
                     <tbody>
                         <tr>
-                            <th class="bg-light" style="width: 200px;">Username</th>
+                            <th style="width: 200px;">Username</th>
                             <td>{{ user.username }}</td>
                         </tr>
                         <tr>
-                            <th class="bg-light">Email</th>
+                            <th>Email</th>
                             <td>{{ user.email|default:"Not set" }}</td>
                         </tr>
                         <tr>
-                            <th class="bg-light">Joined</th>
+                            <th>Joined</th>
                             <td>{{ user.date_joined|date:"d M Y, H:i" }}</td>
                         </tr>
                         <tr>
-                            <th class="bg-light">Last Login</th>
+                            <th>Last Login</th>
                             <td>
                                 {% if user.last_login %}
                                     {{ user.last_login|date:"d M Y, H:i" }}
@@ -50,7 +50,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="bg-light">Total Websites</th>
+                            <th>Total Websites</th>
                             <td>
                                 <span class="badge bg-primary">{{ user.websites.count }}</span>
                             </td>

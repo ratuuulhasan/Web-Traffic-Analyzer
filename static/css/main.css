@@ -468,6 +468,10 @@ a:hover {
     color: white;
 }
 
+.btn:active {
+    transform: scale(0.97);
+}
+
 /* ==================== Empty States ==================== */
 .empty-state {
     text-align: center;
@@ -635,6 +639,55 @@ a:hover {
     animation: fadeIn 0.3s ease-out;
 }
 
+.content-area {
+    animation: contentFadeIn 0.4s ease-out;
+}
+
+@keyframes contentFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card,
+.stat-card {
+    animation: cardFadeIn 0.5s ease-out backwards;
+}
+
+@keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== Number Animation ==================== */
+.count-up {
+    display: inline-block;
+    transition: transform 0.3s;
+}
+
+/* ==================== Website Quick Link ==================== */
+.website-quick-link {
+    background: white;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: inherit;
+}
+
+.website-quick-link:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] .website-quick-link {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .website-quick-link:hover {
+    border-color: var(--primary);
+    background: #1e293b;
+}
+
 /* ==================== Scrollbar ==================== */
 ::-webkit-scrollbar {
     width: 8px;
@@ -658,7 +711,37 @@ a:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* ==================== Dark Mode ==================== */
+/* ==================== Skeleton Loaders ==================== */
+.skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 8px;
+    min-height: 20px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+[data-theme="dark"] .skeleton {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+}
+
+.skeleton-text { height: 14px; margin-bottom: 8px; }
+.skeleton-title { height: 24px; width: 60%; margin-bottom: 12px; }
+.skeleton-card { height: 120px; }
+.skeleton-chart { height: 300px; }
+.skeleton-row { height: 40px; margin-bottom: 4px; }
+.skeleton-circle { width: 40px; height: 40px; border-radius: 50%; }
+
+
+/* ==================================================
+   ============== DARK MODE =========================
+   ================================================== */
+
 [data-theme="dark"] {
     --gray-50: #0f172a;
     --gray-100: #1e293b;
@@ -696,22 +779,9 @@ a:hover {
     color: #e2e8f0;
 }
 
-[data-theme="dark"] .table {
-    color: #e2e8f0;
-}
-
-[data-theme="dark"] .table thead th {
-    background: #0f172a;
-    color: #94a3b8;
-    border-color: #334155;
-}
-
-[data-theme="dark"] .table tbody td {
-    border-color: #334155;
-}
-
-[data-theme="dark"] .table-hover tbody tr:hover {
-    background: rgba(255, 255, 255, 0.03);
+[data-theme="dark"] .card-footer {
+    background: #1e293b !important;
+    border-top-color: #334155 !important;
 }
 
 [data-theme="dark"] .stat-card-value,
@@ -737,6 +807,11 @@ a:hover {
     border-color: var(--primary);
 }
 
+[data-theme="dark"] .form-control::placeholder {
+    color: #64748b !important;
+    opacity: 1;
+}
+
 [data-theme="dark"] .form-label {
     color: #cbd5e1;
 }
@@ -752,6 +827,11 @@ a:hover {
 
 [data-theme="dark"] .dropdown-item:hover {
     background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+[data-theme="dark"] .dropdown-divider {
+    border-color: #334155;
 }
 
 [data-theme="dark"] .list-group-item {
@@ -772,6 +852,7 @@ a:hover {
 [data-theme="dark"] .btn-outline-secondary:hover {
     background: #334155;
     color: white;
+    border-color: #475569;
 }
 
 [data-theme="dark"] .bg-white {
@@ -793,7 +874,72 @@ a:hover {
     border-color: #334155;
 }
 
-/* Theme toggle button */
+/* ==================== Dark Mode Table — Definitive Fix ==================== */
+[data-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-bg-state: transparent;
+    --bs-table-bg-type: transparent;
+    --bs-table-accent-bg: transparent;
+    --bs-table-striped-bg: transparent;
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+    --bs-table-color: #e2e8f0;
+    --bs-table-border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .table > :not(caption) > * > * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .table tbody tr {
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover > * {
+    box-shadow: none !important;
+    background-color: transparent !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .table thead th {
+    background-color: #0f172a !important;
+    box-shadow: none !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .table th {
+    color: #cbd5e1 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .table td {
+    color: #e2e8f0 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .table-responsive {
+    background: transparent !important;
+}
+
+/* Empty state inside table */
+[data-theme="dark"] .table tbody td.text-center {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+}
+
+/* ==================== Theme Toggle ==================== */
 .theme-toggle {
     width: 40px;
     height: 40px;
@@ -819,8 +965,64 @@ a:hover {
     color: white;
 }
 
-/* ==================== Number Animation ==================== */
-.count-up {
-    display: inline-block;
-    transition: transform 0.3s;
+/* ==================== Export Tiles ==================== */
+.export-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 6px;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    background: white;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    min-height: 90px;
+}
+
+.export-tile:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.12);
+    text-decoration: none;
+}
+
+.export-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.export-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    text-align: center;
+}
+
+[data-theme="dark"] .export-tile {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .export-tile:hover {
+    background: #1e293b;
+    border-color: var(--primary);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+}
+
+[data-theme="dark"] .export-label {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] #export-days {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
 }

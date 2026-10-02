@@ -47,6 +47,11 @@ document.addEventListener('DOMContentLoaded', function() {
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             if (iconEl) iconEl.textContent = next === 'dark' ? '☀️' : '🌙';
+            
+            // Charts update করতে reload
+            if (document.querySelector('canvas')) {
+                setTimeout(() => location.reload(), 200);
+            }
         });
     }
 })();
@@ -81,3 +86,4 @@ window.animateNumber = function(element, target, duration = 1200) {
 
     requestAnimationFrame(update);
 };
+

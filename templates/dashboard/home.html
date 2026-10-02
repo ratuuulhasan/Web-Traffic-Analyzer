@@ -266,10 +266,26 @@ fetch('/api/stats/')
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#fff',
+                        titleColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#e2e8f0' : '#1e293b',
+                        bodyColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#475569',
+                        borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#334155' : '#e2e8f0',
+                        borderWidth: 1,
+                    }
+                },
                 scales: { 
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
-                    x: { grid: { display: false } } 
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: getChartColors().grid },
+                        ticks: { color: getChartColors().text }
+                    }, 
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: getChartColors().text }
+                    } 
                 }
             }
         });
